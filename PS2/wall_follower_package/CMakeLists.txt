@@ -31,9 +31,9 @@ catkin_simple()
 # may add more of these lines for more nodes from the same package
 cs_add_executable(nmg63_stdr_open_loop_commander src/nmg63_stdr_open_loop_commander.cpp)
 cs_add_executable(wall_follower_lidar_alarm src/wall_follower_lidar_alarm.cpp)
-cs_add_executable(wall_follower_navigator src/wall_follower_navigator.cpp)
-cs_add_executable(wall_follower_spinner src/wall_follower_spinner.cpp)
-cs_add_executable(wall_follower_tracker src/wall_follower_tracker.cpp)
+# cs_add_executable(wall_follower_navigator src/wall_follower_navigator.cpp)
+# cs_add_executable(wall_follower_spinner src/wall_follower_spinner.cpp)
+# cs_add_executable(wall_follower_tracker src/wall_follower_tracker.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
 # target_link_libraries(example my_lib)
