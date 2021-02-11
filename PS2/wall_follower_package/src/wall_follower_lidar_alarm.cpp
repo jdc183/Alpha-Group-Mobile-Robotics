@@ -10,13 +10,22 @@ const double MIN_SAFE_DISTANCE = 1.0; // set alarm if anything is within 0.5m of
 
 // these values to be set within the laser callback
 float ping_dist_in_front_=3.0; // global var to hold length of a SINGLE LIDAR ping--in front
-int ping_index_= -1; // NOT real; callback will have to find this
+//int ping_index_= -1; // NOT real; callback will have to find this
 double angle_min_=0.0;
 double angle_max_=0.0;
 double angle_increment_=0.0;
 double range_min_ = 0.0;
 double range_max_ = 0.0;
 bool laser_alarm_=false;
+bool laser_initialized = false;
+
+//assuming ccw indexing
+double angle_min_alarm = -0.0872664626;//Rightmost angle of interest
+double angle_max_alarm = 0.0872664626;//Leftmost angle of interest
+double range_min_alarm = 1.0;//minimum distance of interest
+double range_max_alarm = 2.0;//maximum distance of interest
+int max_ping_index = 0;//Index of rightmost angle
+int min_ping_index = 0;//Index of leftmost angle
 
 ros::Publisher lidar_alarm_publisher_;
 ros::Publisher lidar_dist_publisher_;
@@ -24,7 +33,7 @@ ros::Publisher lidar_dist_publisher_;
 // to improve reliability and avoid false alarms or failure to see an obstacle
 
 void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
-    if (ping_index_<0)  {
+    if (!laser_initialized)  {
         //for first message received, set up the desired index of LIDAR range to eval
         angle_min_ = laser_scan.angle_min;
         angle_max_ = laser_scan.angle_max;
@@ -34,20 +43,29 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
         // what is the index of the ping that is straight ahead?
         // BETTER would be to use transforms, which would reference how the LIDAR is mounted;
         // but this will do for simple illustration
-        ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
-        ROS_INFO("LIDAR setup: ping_index = %d",ping_index_);
+//        ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
         
+        //Set ping indices to correspond to angles of interest
+        max_ping_index = (int) ((angle_max_alarm - angle_min_)/angle_increment_);
+        min_ping_index = (int) ((angle_min_alarm - angle_min_)/angle_increment_);
+        ROS_INFO("LIDAR setup");
+        
+        laser_initialized = true;
     }
     
-   ping_dist_in_front_ = laser_scan.ranges[ping_index_];
-   ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
-   if (ping_dist_in_front_<MIN_SAFE_DISTANCE) {
-       ROS_WARN("DANGER, WILL ROBINSON!!");
-       laser_alarm_=true;
-   }
-   else {
-       laser_alarm_=false;
-   }
+    laser_alarm_=false;
+    for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
+    	ping_dist_in_front_ = laser_scan.ranges[ping_index_];
+   	ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+   	
+   	if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
+       	laser_alarm_=true;
+   	}
+    }
+    if (laser_alarm_ = true){
+        ROS_WARN("DANGER, WILL ROBINSON!!");
+    }
+   
    std_msgs::Bool lidar_alarm_msg;
    lidar_alarm_msg.data = laser_alarm_;
    lidar_alarm_publisher_.publish(lidar_alarm_msg);
