@@ -4,7 +4,9 @@
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
+#include <math.h>
 
+#define PI = M_PI;
 
 const double MIN_SAFE_DISTANCE = 1.0; // set alarm if anything is within 0.5m of the front of robot
 
@@ -54,14 +56,19 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     }
     
     laser_alarm_=false;
+
+    //scans lidar data within ping indices to find ranges
     for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
     	ping_dist_in_front_ = laser_scan.ranges[ping_index_];
-   	ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+   		ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
    	
-   	if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
-       	laser_alarm_=true;
-   	}
+   		//checks if each lidar data point is within alarm distance
+   		if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
+       		laser_alarm_=true;
+   		}	
     }
+
+    //sends warning if data point trips lidar alarm
     if (laser_alarm_ = true){
         ROS_WARN("DANGER, WILL ROBINSON!!");
     }
