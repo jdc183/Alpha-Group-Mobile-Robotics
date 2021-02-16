@@ -1,4 +1,5 @@
 // wsn example program to illustrate LIDAR processing.  1/23/15
+// FINISHED @ 2:40 ON 2/15/2021
 
 #include <ros/ros.h> //Must include this for all ROS cpp projects
 #include <sensor_msgs/LaserScan.h>
@@ -71,12 +72,10 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
 
     //sends warning if data point trips lidar alarm
     if (laser_alarm_){
-        ROS_WARN("DANGER, WILL ROBINSON!!");
+        ROS_WARN("GUYS ARE YOU SURE ABOUT THIS!!");
         laser_alarm_ = false;
     }
 
-   // NG I think this section overwrites the actual alarm status and sets it to true at the end of the program no matter what. 
-    	//problem might start at line 85 section...
    std_msgs::Bool lidar_alarm_msg;
    lidar_alarm_msg.data = laser_alarm_;
    lidar_alarm_publisher_.publish(lidar_alarm_msg);
