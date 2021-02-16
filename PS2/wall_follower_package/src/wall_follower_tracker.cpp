@@ -12,12 +12,39 @@
 #include <std_msgs/Bool.h> // boolean message 
 #include <math.h>
 #define PI M_PI
-	
+
+using namespace std;
+
+double speed = 1.0;
+
+void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
+    bool front_obstruction = lidar_alarm_msg.data;
+    if(front_obstruction){//If something's in front of us...
+        //Stop and turn right 90 degrees
+        //add code
+
+    }
+    else {
+        //Go straight
+        twist_cmd.linear.x=speed;
+        twist_cmd.linear.y=0.0;    
+        twist_cmd.linear.z=0.0;
+        twist_cmd.angular.x=0.0;
+        twist_cmd.angular.y=0.0;
+        twist_cmd.angular.z=0.0;
+    }
+}
+
+void left_obstruction_callback(){
+
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "stdr_commander"); // initialize a new node
     ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
     ros::Publisher twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1); // set name you use when you publish. declare the data type.
-
+    ros::Subscriber front_subscriber = nh.subscribe("lidar_alarm", 1, front_obstruction_callback);
+    ros::Subscriber front_subscriber = nh.subscribe("left_lidar_alarm", 1, left_obstruction_callback);
     // while not triggering lidar alarm
     	// while not triggering wall follower navigator
     		// move forward via twist command stuff
