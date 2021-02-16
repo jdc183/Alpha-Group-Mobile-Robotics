@@ -24,3 +24,4 @@ int main(int argc, char **argv) {
     	// if triggeres wall follower navigator or lidar alarm
     		// run wall follower spinnner until signal goes away
     // that should be it?
+}
