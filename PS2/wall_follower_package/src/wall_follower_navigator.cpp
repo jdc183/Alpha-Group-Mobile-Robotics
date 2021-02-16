@@ -13,7 +13,7 @@
 #include <std_msgs/Bool.h> // boolean message 
 #include <math.h>
 
-#define PI = M_PI
+#define PI M_PI
 
 const double MIN_SAFE_DISTANCE = 1.0; // set alarm if anything is within 0.5m of the front of robot
 
