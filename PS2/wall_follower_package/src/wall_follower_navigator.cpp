@@ -29,8 +29,8 @@ bool laser_alarm_=false;
 bool laser_initialized = false;
 
 //assuming ccw indexing
-double angle_min_alarm = 5*PI/6;//Rightmost angle of interest
-double angle_max_alarm = 7*PI/6;//Leftmost angle of interest
+double angle_min_alarm = PI/3;//Rightmost angle of interest
+double angle_max_alarm = 2*PI/3;//Leftmost angle of interest
 double range_min_alarm = 0.06;//minimum distance of interest
 double range_max_alarm = 2.0;//maximum distance of interest
 // triggers when distance is greater than 2 meters
