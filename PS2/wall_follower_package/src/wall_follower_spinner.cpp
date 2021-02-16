@@ -43,9 +43,18 @@ int main(int argc, char **argv) {
           //we know how long this sleep will run for. rate is smarter than the duration command. 
               // lets you sleep for remainder of time, not immediately for 1s.
 
-          // no_wall_on_left = true 
+          // no_wall_on_left = false 
           // NG: DO NOT KNOW IF WE WOULD WANT THIS HERE OR IN NODE 4....
           		// MAY WANT IT HERE TO RESET AFTER EACH ROTATION AND CHECK AGAIN? NOT SURE
           }
+            // robot will keep doing the last twist command sent to it, so make sure to stop the robot!
+    
+    //halt the motion
+    twist_cmd.angular.z=0.0; 
+    twist_cmd.linear.x=0.0; 
+    for (int i=0;i<10;i++) {
+      twist_commander.publish(twist_cmd);
+      loop_timer.sleep();
+    }         
     //done commanding the robot; node runs to completion
 }
