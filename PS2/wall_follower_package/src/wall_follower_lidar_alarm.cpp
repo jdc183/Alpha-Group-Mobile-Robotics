@@ -24,8 +24,9 @@ bool laser_initialized = false;
 //assuming ccw indexing
 double angle_min_alarm = -0.0872664626;//Rightmost angle of interest
 double angle_max_alarm = 0.0872664626;//Leftmost angle of interest
-double range_min_alarm = 1.0;//minimum distance of interest
+double range_min_alarm = 0.06;//minimum distance of interest
 double range_max_alarm = 2.0;//maximum distance of interest
+// triggers when distance is greater than 2 meters
 int max_ping_index = 0;//Index of rightmost angle
 int min_ping_index = 0;//Index of leftmost angle
 
@@ -71,6 +72,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     //sends warning if data point trips lidar alarm
     if (laser_alarm_ = true){
         ROS_WARN("DANGER, WILL ROBINSON!!");
+        laser_alarm = false;
     }
 
    // NG I think this section overwrites the actual alarm status and sets it to true at the end of the program no matter what. 
