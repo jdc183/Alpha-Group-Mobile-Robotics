@@ -34,11 +34,18 @@ int main(int argc, char **argv) {
     }
     // starting movements!
     twist_cmd.angular.z=yaw_rate; // start spinning in place approx 90 deg
-    timer=0.0; //reset the timer
+    // We should not have to reset the timer here, but it was not happy unless I had this line in
+        timer=0.0; //reset the timer
     while(timer<time_3_sec) {
-          twist_commander.publish(twist_cmd);
-          timer+=sample_dt;
-          loop_timer.sleep();
+          twist_commander.publish(twist_cmd); //publish the entity that it expects
+          timer+=sample_dt; //keeps track of how long we have been moving
+          loop_timer.sleep(); 
+          //we know how long this sleep will run for. rate is smarter than the duration command. 
+              // lets you sleep for remainder of time, not immediately for 1s.
+
+          // no_wall_on_left = true 
+          // NG: DO NOT KNOW IF WE WOULD WANT THIS HERE OR IN NODE 4....
+          		// MAY WANT IT HERE TO RESET AFTER EACH ROTATION AND CHECK AGAIN? NOT SURE
           }
     //done commanding the robot; node runs to completion
 }
