@@ -77,7 +77,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
 
     //sends warning if data point trips lidar alarm
     if (laser_alarm_){
-        ROS_WARN("GUYS ARE YOU SURE ABOUT THIS!!");
+        ROS_WARN("MY SAFETY NET IS GONE WHERE AM I!");
         laser_alarm_ = false;
     }
 
