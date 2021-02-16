@@ -1,3 +1,4 @@
+
 // Node designed to inspect a box on the left side of the robot
 // This is to detect that a wall is present nearby on the left of the robot
 
@@ -6,103 +7,100 @@
 // We do not want to set off an alarm, but we do want to create a 'dummy' variable that triggers when the robot will need to rotate because there is no wall on the LHS
 // This variable will be reset in node 4 instead of this code (i think)
 
-//heading service: receives requests for desired heading of stdr robot, and makes it so
+#include <ros/ros.h> //Must include this for all ROS cpp projects
+#include <sensor_msgs/LaserScan.h>
+#include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
+#include <std_msgs/Bool.h> // boolean message 
+#include <math.h>
 
-// heading_service code from Newman. This node is done! Uses feedback and no open loop timing. Quite precise. Won't stop until it gets heading to 5 milliradians.
-#include <ros/ros.h>
-#include <double_vec_srv/DblVecSrv.h>
-#include <geometry_msgs/Twist.h>
-#include <tf/transform_listener.h>
-//# tf...will get to this
+#define PI = M_PI;
 
-using namespace std;
-ros::Publisher *g_twist_commander_ptr;
-tf::TransformListener *g_tfListener_ptr; 
-tf::StampedTransform    g_robot_wrt_world_stf;    
-double KV = 1.0;
-double HEADING_TOL = 0.005; //this many radians error is considered within tolerance
+const double MIN_SAFE_DISTANCE = 1.0; // set alarm if anything is within 0.5m of the front of robot
 
-double heading_from_tf(tf::StampedTransform stf) {
-    tf::Quaternion quat;
-    quat = stf.getRotation();
-    double theta = quat.getAngle();
-    return theta;    
+// these values to be set within the laser callback
+float ping_dist_in_front_=3.0; // global var to hold length of a SINGLE LIDAR ping--in front
+//int ping_index_= -1; // NOT real; callback will have to find this
+double angle_min_=0.0;
+double angle_max_=0.0;
+double angle_increment_=0.0;
+double range_min_ = 0.0;
+double range_max_ = 0.0;
+bool laser_alarm_=false;
+bool laser_initialized = false;
+
+//assuming ccw indexing
+double angle_min_alarm = 5*PI/6;//Rightmost angle of interest
+double angle_max_alarm = 7*PI/6;//Leftmost angle of interest
+double range_min_alarm = 0.06;//minimum distance of interest
+double range_max_alarm = 2.0;//maximum distance of interest
+// triggers when distance is greater than 2 meters
+int max_ping_index = 0;//Index of rightmost angle
+int min_ping_index = 0;//Index of leftmost angle
+
+ros::Publisher lidar_alarm_publisher_;
+ros::Publisher lidar_dist_publisher_;
+// really, do NOT want to depend on a single ping.  Should consider a subset of pings
+// to improve reliability and avoid false alarms or failure to see an obstacle
+
+void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
+    if (!laser_initialized)  {
+        //for first message received, set up the desired index of LIDAR range to eval
+        angle_min_ = laser_scan.angle_min;
+        angle_max_ = laser_scan.angle_max;
+        angle_increment_ = laser_scan.angle_increment;
+        range_min_ = laser_scan.range_min;
+        range_max_ = laser_scan.range_max;
+        // what is the index of the ping that is straight ahead?
+        // BETTER would be to use transforms, which would reference how the LIDAR is mounted;
+        // but this will do for simple illustration
+//        ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
+        
+        //Set ping indices to correspond to angles of interest
+        max_ping_index = (int) ((angle_max_alarm - angle_min_)/angle_increment_);
+        min_ping_index = (int) ((angle_min_alarm - angle_min_)/angle_increment_);
+        ROS_INFO("LIDAR setup");
+        
+        laser_initialized = true;
+    }
+    
+    laser_alarm_=false;
+
+    //scans lidar data within ping indices to find ranges
+    for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
+      ping_dist_in_front_ = laser_scan.ranges[ping_index_];
+      ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+    
+      //checks if each lidar data point is within alarm distance
+      if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
+          laser_alarm_=true;
+      } 
+    }
+
+    //sends warning if data point trips lidar alarm
+    if (laser_alarm_){
+        ROS_WARN("MY SAFETY NET IS GONE WHERE AM I!");
+        laser_alarm_ = false;
+    }
+
+   std_msgs::Bool lidar_alarm_msg;
+   lidar_alarm_msg.data = laser_alarm_;
+   lidar_alarm_publisher_.publish(lidar_alarm_msg);
+   std_msgs::Float32 lidar_dist_msg;
+   lidar_dist_msg.data = ping_dist_in_front_;
+   lidar_dist_publisher_.publish(lidar_dist_msg);   
 }
 
-bool callback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecSrvResponse& response)
-{
-    ROS_INFO("callback activated");
-    double desired_heading = request.vec_of_doubles[0];
-    ROS_INFO("received request to rotate to heading of %f",desired_heading);
-    double heading;
-    
-    //perform action to carry out request
-    geometry_msgs::Twist twist_cmd; //this is the message type required to send twist commands to STDR 
-    // start with all zeros in the command message; should be the case by default, but just to be safe..
-    twist_cmd.linear.x=0.0;
-    twist_cmd.linear.y=0.0;    
-    twist_cmd.linear.z=0.0;
-    twist_cmd.angular.x=0.0;
-    twist_cmd.angular.y=0.0;
-    twist_cmd.angular.z=0.0;    
-    g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
-    heading= heading_from_tf(g_robot_wrt_world_stf);
-    double heading_err = 100.0; //not true; just init
-   while (fabs(heading_err)>HEADING_TOL) {          
-        g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
-
-        //extract the heading:
-        heading= heading_from_tf(g_robot_wrt_world_stf);
-        ROS_INFO("current heading is %f",heading);
-        heading_err = desired_heading-heading;
-        if (heading_err>M_PI) { heading_err-=2*M_PI;}
-        if (heading_err<-M_PI) {heading_err+=2*M_PI;}
-        ROS_INFO("heading error = %f",heading_err);
-    
-        twist_cmd.angular.z=KV*heading_err;         
-    
-        g_twist_commander_ptr->publish(twist_cmd);
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();    
-  }
-    
-    twist_cmd.angular.z=0.0;         //bring robot to a halt
-    g_twist_commander_ptr->publish(twist_cmd); 
-    
-    ROS_INFO("converged with heading error = %f",heading_err);
-    //as a courtesy, put resulting heading in the response
-    response.vec_of_doubles.clear();
-    response.vec_of_doubles.push_back(heading);     
-    
-    
-  return true;
+int main(int argc, char **argv) {
+    ros::init(argc, argv, "navigator"); //name this node
+    ros::NodeHandle nh; 
+    //create a Subscriber object and have it subscribe to the lidar topic
+    ros::Publisher pub = nh.advertise<std_msgs::Bool>("left_lidar_alarm", 1);
+    lidar_alarm_publisher_ = pub; // let's make this global, so callback can use it
+    ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("left_lidar_dist", 1);  
+    lidar_dist_publisher_ = pub2;
+    ros::Subscriber lidar_subscriber = nh.subscribe("robot0/laser_0", 1, laserCallback);
+    ros::spin(); //this is essentially a "while(1)" statement, except it
+    // forces refreshing wakeups upon new data arrival
+    // main program essentially hangs here, but it must stay alive to keep the callback function alive
+    return 0; // should never get here, unless roscore dies
 }
-
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "heading_service");
-  ros::NodeHandle n;
-  ros::Publisher twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1);
-  g_twist_commander_ptr= &twist_commander;
-  ros::ServiceServer service = n.advertiseService("stdr_rotation_service", callback);
-  g_tfListener_ptr = new tf::TransformListener; 
-  
-    ROS_INFO("trying to get robot pose w/rt world...");
-    bool tferr=true;
-    while (tferr) {
-        tferr = false;
-        try {            
-            g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
-        } catch (tf::TransformException &exception) {
-            ROS_WARN("%s; retrying...", exception.what());
-            tferr = true;
-            ros::spinOnce();
-        }
-    }   
-  
-  ros::spin();
-
-  return 0;
-}
-
-
