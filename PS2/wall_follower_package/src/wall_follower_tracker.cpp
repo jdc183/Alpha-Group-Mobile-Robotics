@@ -11,7 +11,7 @@
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
 #include <math.h>
-#define PI = M_PI;
+#define PI M_PI
 	
 int main(int argc, char **argv) {
     ros::init(argc, argv, "stdr_commander"); // initialize a new node
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
 
     // from heading_test_client.cpp in order to talk to the service
-    ros::init(argc, argv, "heading_test_client");
+    ros::init(argc, argv, "wall_follower_spinner");
     ros::NodeHandle n;
     ros::ServiceClient client = n.serviceClient<double_vec_srv::DblVecSrv>("stdr_rotation_service");
     double_vec_srv::DblVecSrv srv;
