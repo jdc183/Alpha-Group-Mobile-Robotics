@@ -72,7 +72,9 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     if (laser_alarm_ = true){
         ROS_WARN("DANGER, WILL ROBINSON!!");
     }
-   
+
+   // NG I think this section overwrites the actual alarm status and sets it to true at the end of the program no matter what. 
+    	//problem might start at line 85 section...
    std_msgs::Bool lidar_alarm_msg;
    lidar_alarm_msg.data = laser_alarm_;
    lidar_alarm_publisher_.publish(lidar_alarm_msg);
