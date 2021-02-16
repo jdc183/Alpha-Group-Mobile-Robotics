@@ -1,3 +1,5 @@
+// FINISHED @ 4:40 ON 2/15/2021
+// Still may need to adjust parameters in future...
 
 // Node designed to inspect a box on the left side of the robot
 // This is to detect that a wall is present nearby on the left of the robot
