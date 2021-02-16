@@ -16,13 +16,19 @@
 using namespace std;
 
 double speed = 1.0;
+ros::ServiceClient client;
 
 void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
     bool front_obstruction = lidar_alarm_msg.data;
     if(front_obstruction){//If something's in front of us...
         //Stop and turn right 90 degrees
         //add code
-
+        srv.request.vec_of_doubles.resize(1);
+        srv.request.vec_of_doubles[0]=PI/2;
+        //alt:
+        //srv.request.vec_of_doubles.clear();
+        //srv.request.vec_of_doubles.push_back(desired_heading);
+        client.call(srv);
     }
     else {
         //Go straight
