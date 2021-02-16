@@ -32,7 +32,7 @@ bool laser_initialized = false;
 double angle_min_alarm = PI/3;//Rightmost angle of interest
 double angle_max_alarm = 2*PI/3;//Leftmost angle of interest
 double range_min_alarm = 0.06;//minimum distance of interest
-double range_max_alarm = 2.0;//maximum distance of interest
+double range_max_alarm = 0.5;//maximum distance of interest
 // triggers when distance is greater than 2 meters
 int max_ping_index = 0;//Index of rightmost angle
 int min_ping_index = 0;//Index of leftmost angle
