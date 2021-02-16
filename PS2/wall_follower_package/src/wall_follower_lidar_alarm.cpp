@@ -72,7 +72,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     //sends warning if data point trips lidar alarm
     if (laser_alarm_ = true){
         ROS_WARN("DANGER, WILL ROBINSON!!");
-        laser_alarm = false;
+        laser_alarm_ = false;
     }
 
    // NG I think this section overwrites the actual alarm status and sets it to true at the end of the program no matter what. 
