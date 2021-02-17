@@ -50,6 +50,8 @@ void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
         twist_cmd.angular.x=0.0;
         twist_cmd.angular.y=0.0;
         twist_cmd.angular.z=0.0;
+        twist_commander.publish(twist_cmd);
+
         desired_heading = 0.0;
         srv.request.vec_of_doubles.resize(1);
 
