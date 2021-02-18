@@ -30,7 +30,7 @@ bool front_obstruction = false;
 bool left_obstruction = false;
 
 tf::TransformListener *g_tfListener_ptr; 
-tf::StampedTransform    g_robot_wrt_world_stf;
+tf::StampedTransform  g_robot_wrt_world_stf;
 
 double heading_from_tf(tf::StampedTransform stf) {
     tf::Quaternion quat;
@@ -41,6 +41,7 @@ double heading_from_tf(tf::StampedTransform stf) {
 
 void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
     front_obstruction = lidar_alarm_msg.data;
+    /*
     if(front_obstruction){//If something's in front of us...
 
         //Stop and turn right 90 degrees:
@@ -55,7 +56,7 @@ void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
         desired_heading = 0.0;
         srv.request.vec_of_doubles.resize(1);
 
-        g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+        g_tfListener_ptr->lookupTransform("map", "robot0", ros::Time(0), g_robot_wrt_world_stf);
 
         //extract the heading:
         heading= heading_from_tf(g_robot_wrt_world_stf);
@@ -69,7 +70,7 @@ void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
     else if(!left_obstruction){//If nothing is to our left
         //turn left:
 
-        g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+        g_tfListener_ptr->lookupTransform("map", "robot0", ros::Time(0), g_robot_wrt_world_stf);
 
         //extract the heading:
         heading= heading_from_tf(g_robot_wrt_world_stf);
@@ -92,7 +93,7 @@ void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
         twist_cmd.angular.z=0.0;
         twist_commander.publish(twist_cmd);
 
-    }
+    }*/
 }
 
 void left_obstruction_callback(const std_msgs::Bool& left_alarm_msg){
@@ -106,6 +107,7 @@ int main(int argc, char **argv) {
     twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1); // set name you use when you publish. declare the data type.
     ros::Subscriber front_subscriber = n.subscribe("lidar_alarm", 1, front_obstruction_callback);
     ros::Subscriber left_subscriber = n.subscribe("left_lidar_alarm", 1, left_obstruction_callback);
+
     // while not triggering lidar alarm
     	// while not triggering wall follower navigator
     		// move forward via twist command stuff
@@ -131,20 +133,87 @@ int main(int argc, char **argv) {
         client.call(srv);  
     }
 */
+    ROS_INFO("entered conditional");
+    if(front_obstruction){//If something's in front of us...
+        ROS_INFO("entered if(front_obstruction)");
+        //Stop and turn right 90 degrees:
+        twist_cmd.linear.x=0.0;
+        twist_cmd.linear.y=0.0;    
+        twist_cmd.linear.z=0.0;
+        twist_cmd.angular.x=0.0;
+        twist_cmd.angular.y=0.0;
+        twist_cmd.angular.z=0.0;
+        twist_commander.publish(twist_cmd);
+
+        desired_heading = 0.0;
+        srv.request.vec_of_doubles.resize(1);
+
+        ROS_INFO("before");
+        g_tfListener_ptr->lookupTransform("map", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+        ROS_INFO("after");
+
+        //extract the heading:
+        heading= heading_from_tf(g_robot_wrt_world_stf);
+
+        //update desired heading
+        desired_heading = heading-PI/2;
+
+        srv.request.vec_of_doubles[0]=desired_heading;
+        client.call(srv);
+        ROS_INFO("Something in front! Turning right.");
+    }
+    else if(left_obstruction){//If nothing is to our left
+        ROS_INFO("else if(!left_obstruction)");
+        //turn left:
+
+        g_tfListener_ptr->lookupTransform("map", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+        ROS_INFO("declared TFListener");
+
+        //extract the heading:
+        heading= heading_from_tf(g_robot_wrt_world_stf);
+        ROS_INFO("heading from tf extracted");
+
+        //update desired heading
+        desired_heading = heading+PI/2;
+        ROS_INFO("heading from tf updated 90degrees");
+
+        //Ask the spinner service to turn us left 90 degrees
+        srv.request.vec_of_doubles.resize(1);
+        ROS_INFO("resized successfully");
+        srv.request.vec_of_doubles[0]=desired_heading;
+        ROS_INFO("set first index of vector");
+        client.call(srv);
+        ROS_INFO("Server called. Nothing left! Turning left.");
+    }
+    else {
+        ROS_INFO("else");
+        //Go straight
+        twist_cmd.linear.x=speed;
+        twist_cmd.linear.y=0.0;    
+        twist_cmd.linear.z=0.0;
+        twist_cmd.angular.x=0.0;
+        twist_cmd.angular.y=0.0;
+        twist_cmd.angular.z=0.0;
+        twist_commander.publish(twist_cmd);
+        ROS_INFO("Going straight.");
+    }
+
+
     g_tfListener_ptr = new tf::TransformListener; 
   
     ROS_INFO("trying to get robot pose w/rt world...");
     bool tferr=true;
+    /*
     while (tferr) {
         tferr = false;
         try {            
-            g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+            g_tfListener_ptr->lookupTransform("map", "robot0", ros::Time(0), g_robot_wrt_world_stf);
         } catch (tf::TransformException &exception) {
             ROS_WARN("%s; retrying...", exception.what());
             tferr = true;
             ros::spinOnce();
         }
-    }   
+    }   */
     ros::spin();
     return 0;
 }

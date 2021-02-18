@@ -42,11 +42,11 @@ bool callback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecS
     twist_cmd.angular.x=0.0;
     twist_cmd.angular.y=0.0;
     twist_cmd.angular.z=0.0;    
-    g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+    g_tfListener_ptr->lookupTransform("map_static", "robot0", ros::Time(0), g_robot_wrt_world_stf);
     heading= heading_from_tf(g_robot_wrt_world_stf);
     double heading_err = 100.0; //not true; just init
    while (fabs(heading_err)>HEADING_TOL) {          
-        g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+        g_tfListener_ptr->lookupTransform("map_static", "robot0", ros::Time(0), g_robot_wrt_world_stf);
 
         //extract the heading:
         heading= heading_from_tf(g_robot_wrt_world_stf);
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     while (tferr) {
         tferr = false;
         try {            
-            g_tfListener_ptr->lookupTransform("world", "robot0", ros::Time(0), g_robot_wrt_world_stf);
+            g_tfListener_ptr->lookupTransform("map_static", "robot0", ros::Time(0), g_robot_wrt_world_stf);
         } catch (tf::TransformException &exception) {
             ROS_WARN("%s; retrying...", exception.what());
             tferr = true;
