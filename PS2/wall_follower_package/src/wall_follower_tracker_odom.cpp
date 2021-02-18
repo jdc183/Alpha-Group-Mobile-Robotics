@@ -17,10 +17,27 @@
 
 using namespace std;
 
+// Ian Help Changes
+double heading_from_odom(nav_msgs::Odometry odom){
+    tf::Quaternion quat;
+    quat = odom.pose.pose.orientation;
+    double theta = quat.getAngle()
+
+}
+
+void odom_callback(nav_msgs::Odometry odom){
+
+	heading = heading_from_odom(odom);
+
+}
+
+        //double speed = 1.0; // in line 59
+// end Ian help
+
 double speed = 1.0;
 double heading;
 double desired_heading = 0.0;
-double_vec_srv::DblVecSrv srv;
+double_vec_srv::DblVecSrv srv; // confused on this line.... it is not blue because it is attached to the var nam... do we need another double?
 ros::ServiceClient client;
 
 ros::Publisher twist_commander;
@@ -32,12 +49,15 @@ bool left_obstruction = false;
 tf::TransformListener *g_tfListener_ptr; 
 tf::StampedTransform  g_robot_wrt_world_stf;
 
+// I dont think we want to do this next section
+/*
 double heading_from_tf(tf::StampedTransform stf) {
     tf::Quaternion quat;
     quat = stf.getRotation();
     double theta = quat.getAngle();
     return theta;    
 }
+*/
 
 void front_obstruction_callback(const std_msgs::Bool& lidar_alarm_msg){
     front_obstruction = lidar_alarm_msg.data;
@@ -108,6 +128,31 @@ int main(int argc, char **argv) {
     ros::Subscriber front_subscriber = n.subscribe("lidar_alarm", 1, front_obstruction_callback);
     ros::Subscriber left_subscriber = n.subscribe("left_lidar_alarm", 1, left_obstruction_callback);
 
+    // Ian help changes
+    twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1); // set name you use when you publish. declare the data type.
+    ros::Subscriber front_subscriber = n.subscribe("/lidar_alarm", 1, front_obstruction_callback);
+
+    ros::Subscriber lodom_sub = n.subscribe("/robot0/odom", 1, odom_callback);
+
+	while(ros::ok()) {
+
+		if(lidar_alarm==false){
+			geometry_msgs::Twist twist_cmd;
+			twist_cmd.linear.x=speed;
+        	twist_cmd.linear.y=0.0;    
+	        twist_cmd.linear.z=0.0;
+	        twist_cmd.angular.x=0.0;
+	        twist_cmd.angular.y=0.0;
+	        twist_cmd.angular.z=0.0;
+	        twist_commander.publish(twist_cmd);
+		}
+
+		ros::spinOnce();
+
+	}
+// end Ian help changes
+
+
     // while not triggering lidar alarm
     	// while not triggering wall follower navigator
     		// move forward via twist command stuff
@@ -153,8 +198,13 @@ int main(int argc, char **argv) {
         ROS_INFO("after");
 
         //extract the heading:
-        heading= heading_from_tf(g_robot_wrt_world_stf);
+        //heading= heading_from_tf(g_robot_wrt_world_stf); // we want odom
+        void left_obstruction_callback(const std_msgs::Bool& left_alarm_msg){
 
+    	left_obstruction = left_alarm_msg.data;
+
+		}
+// i think lines 207-214 should be inside the void?
         //update desired heading
         desired_heading = heading-PI/2;
 
@@ -214,6 +264,6 @@ int main(int argc, char **argv) {
             ros::spinOnce();
         }
     }   */
-    ros::spin();
+    // ros::spin(); // this is the spin issue
     return 0;
 }
