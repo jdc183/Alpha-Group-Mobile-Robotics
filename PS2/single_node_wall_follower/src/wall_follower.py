@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # roslaunch xml file: package, type = executable.py, name = node, elements
 import roslib; roslib.load_manifest("single_node_wall_follower")
