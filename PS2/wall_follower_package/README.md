@@ -11,6 +11,6 @@ Node3:  wall_follower_spinner.  This node is designed to offer a service to rota
 
 Node4:  wall_follower_tracker.  This is our final node that will connect the other three nodes written for PS2 to program the robot to follow the left hand wall of the course.
 
-In order to run this code, you will first need to boot up the stdr simulator: roslaunch stdr_launchers server_with_map_and_gui_plus_robot.launch
+In order to run this code, you will first need to launch the simulator, service, and helper nodes with: roslaunch wall_following_robot wall_follower.launch
 
 Afterwards, you will need to run: rosrun wall_following_robot wall_follower_tracker

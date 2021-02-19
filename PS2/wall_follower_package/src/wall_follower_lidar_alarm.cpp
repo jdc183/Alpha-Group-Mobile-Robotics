@@ -7,7 +7,7 @@
 #include <std_msgs/Bool.h> // boolean message 
 #include <math.h>
 
-#define PI M_PI;
+#define PI M_PI
 
 const double MIN_SAFE_DISTANCE = 1.0; // set alarm if anything is within 0.5m of the front of robot
 
@@ -23,10 +23,11 @@ bool laser_alarm_=false;
 bool laser_initialized = false;
 
 //assuming ccw indexing
-double angle_min_alarm = -0.0872664626;//Rightmost angle of interest
-double angle_max_alarm = 0.0872664626;//Leftmost angle of interest
-double range_min_alarm = 0.06;//minimum distance of interest
-double range_max_alarm = 2.0;//maximum distance of interest
+double window_deg = 10.0;
+double angle_min_alarm = (window_deg/2)*(-PI/180);//Rightmost angle of interest
+double angle_max_alarm = (window_deg/2)*(PI/180);//Leftmost angle of interest
+double range_min_alarm = 0.2;//minimum distance of interest
+double range_max_alarm = 0.6;//maximum distance of interest
 // triggers when distance is greater than 2 meters
 int max_ping_index = 0;//Index of rightmost angle
 int min_ping_index = 0;//Index of leftmost angle
@@ -62,7 +63,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     //scans lidar data within ping indices to find ranges
     for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
     	ping_dist_in_front_ = laser_scan.ranges[ping_index_];
-   		ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+   		//ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
    	
    		//checks if each lidar data point is within alarm distance
    		if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
@@ -72,7 +73,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
 
     //sends warning if data point trips lidar alarm
     if (laser_alarm_){
-        ROS_WARN("GUYS ARE YOU SURE ABOUT THIS!!");
+        //ROS_WARN("GUYS ARE YOU SURE ABOUT THIS!!");
     }
 
    std_msgs::Bool lidar_alarm_msg;

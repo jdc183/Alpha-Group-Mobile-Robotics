@@ -45,7 +45,7 @@ bool callback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecS
     g_tfListener_ptr->lookupTransform("map_static", "robot0", ros::Time(0), g_robot_wrt_world_stf);
     heading= heading_from_tf(g_robot_wrt_world_stf);
     double heading_err = 100.0; //not true; just init
-   while (fabs(heading_err)>HEADING_TOL) {          
+   	while (fabs(heading_err)>HEADING_TOL) {          
         g_tfListener_ptr->lookupTransform("map_static", "robot0", ros::Time(0), g_robot_wrt_world_stf);
 
         //extract the heading:
@@ -61,7 +61,7 @@ bool callback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecS
         g_twist_commander_ptr->publish(twist_cmd);
         ros::spinOnce();
         ros::Duration(0.01).sleep();    
-  }
+  	}
     
     twist_cmd.angular.z=0.0;         //bring robot to a halt
     g_twist_commander_ptr->publish(twist_cmd); 
@@ -71,18 +71,17 @@ bool callback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecS
     response.vec_of_doubles.clear();
     response.vec_of_doubles.push_back(heading);     
     
-    
-  return true;
+  	return true;
 }
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "heading_service");
-  ros::NodeHandle n;
-  ros::Publisher twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1);
-  g_twist_commander_ptr= &twist_commander;
-  ros::ServiceServer service = n.advertiseService("stdr_rotation_service", callback);
-  g_tfListener_ptr = new tf::TransformListener; 
+	ros::init(argc, argv, "heading_service");
+	ros::NodeHandle n;
+	ros::Publisher twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1);
+	g_twist_commander_ptr= &twist_commander;
+	ros::ServiceServer service = n.advertiseService("stdr_rotation_service", callback);
+	g_tfListener_ptr = new tf::TransformListener; 
   
     ROS_INFO("trying to get robot pose w/rt world...");
     bool tferr=true;
@@ -97,9 +96,7 @@ int main(int argc, char **argv)
         }
     }   
   
-  ros::spin();
+	ros::spin();
 
-  return 0;
+	return 0;
 }
-
-

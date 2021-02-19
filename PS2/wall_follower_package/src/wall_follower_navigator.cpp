@@ -31,10 +31,11 @@ bool laser_alarm_=false;
 bool laser_initialized = false;
 
 //assuming ccw indexing
-double angle_min_alarm = PI/3;//Rightmost angle of interest
-double angle_max_alarm = 2*PI/3;//Leftmost angle of interest
+double window_deg = 75;
+double angle_min_alarm = PI/2 - (window_deg/2)*(PI/180);//Rightmost angle of interest
+double angle_max_alarm = PI/2 + (window_deg/2)*(PI/180);//Leftmost angle of interest
 double range_min_alarm = 0.06;//minimum distance of interest
-double range_max_alarm = 0.5;//maximum distance of interest
+double range_max_alarm = 0.8;//maximum distance of interest
 // triggers when distance is greater than 2 meters
 int max_ping_index = 0;//Index of rightmost angle
 int min_ping_index = 0;//Index of leftmost angle
@@ -55,7 +56,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
         // what is the index of the ping that is straight ahead?
         // BETTER would be to use transforms, which would reference how the LIDAR is mounted;
         // but this will do for simple illustration
-//        ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
+        //ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
         
         //Set ping indices to correspond to angles of interest
         max_ping_index = (int) ((angle_max_alarm - angle_min_)/angle_increment_);
@@ -70,7 +71,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     //scans lidar data within ping indices to find ranges
     for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
       ping_dist_in_front_ = laser_scan.ranges[ping_index_];
-      ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+      //ROS_INFO("ping dist to left = %f",ping_dist_in_front_);
     
       //checks if each lidar data point is within alarm distance
       if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
@@ -79,8 +80,8 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     }
 
     //sends warning if data point trips lidar alarm
-    if (laser_alarm_){
-        ROS_WARN("MY SAFETY NET IS GONE WHERE AM I!");
+    if (!laser_alarm_){
+        //ROS_WARN("MY SAFETY NET IS GONE WHERE AM I!");
     }
 
    std_msgs::Bool lidar_alarm_msg;

@@ -1,0 +1,15 @@
+<launch>
+
+	<include file="$(find stdr_launchers)/launch/server_with_map_and_gui_plus_robot.launch"/>
+
+	<node name="stdr_rotation_service" pkg="wall_following_robot" type="wall_follower_spinner" output="screen"/>
+	
+	<node name="lidar_alarm" pkg="wall_following_robot" type="wall_follower_lidar_alarm" output="screen"/>
+	
+	<node name="lidar_dist" pkg="wall_following_robot" type="wall_follower_lidar_alarm" output="screen"/>
+	
+	<node name="left_lidar_alarm" pkg="wall_following_robot" type="wall_follower_navigator" output="screen"/>
+	
+	<node name="left_lidar_dist" pkg="wall_following_robot" type="wall_follower_navigator" output="screen"/>
+
+</launch>
