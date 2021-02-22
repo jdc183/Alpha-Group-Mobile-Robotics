@@ -30,11 +30,10 @@ for i = 1:15 %update to reflect names of data
     
     %Resize 1st derivative
     dx = (dx(1:n-2)+dx(2:n-1))/2;
-    % Need this for non-trimmed csv
-    % dx = dx + 0.0000001; % approximation to avoid dx = 0
+    % Need this for non-trimmed c
+    %dx = dx + 0.0000001; % approximation to avoid dx = 0
     dy = (dy(1:n-2)+dy(2:n-1))/2;
-    % Need this for non-trimmed csv
-    % dy = dy + 0.0000001; % approximation to avoid dy = 0
+    %dy = dy + 0.0000001; % approximation to avoid dy = 0
     
     % Compute the curvatrue
     curvature = (dx.*d2y-dy.*d2x)./(dx.^2+dy.^2).^(3/2);
@@ -44,13 +43,13 @@ for i = 1:15 %update to reflect names of data
     sa = (sa(1:n-2)+sa(2:n-1)+sa(3:n))/3;
     
     
-    win = 50; % Width of window function
+    win=50;%Width of window function
     
     %Smooth out the noisy data
     curvature = conv(curvature,ones(win,1)/win,'same');
     sa = conv(sa,ones(win,1)/win,'same');
     
-    plot(sa, curvature, 'o')
+    plot(sa,curvature,'o')
     hold on
 %     plot(x,y);
 %     hold on
