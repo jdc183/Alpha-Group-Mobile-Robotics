@@ -113,13 +113,13 @@ xlabel('radians') % check that this is actually radians
 
 % Choose values for K_psi and K_offset. 
     % Describe recommendations for controller gains.
-    K_psi = ;
-    K_offset = ;
+    K_psi = 3; % Guessed
+    K_offset = 30; % Guessed
     
 % Choose values for initial offset and heading errors. 
     % Describe influences of initial conditions. 
-    d_offset = ;
-    psi = ; % Is this the heading error?
+    d_offset = 0.1;% Guessed
+    psi = 60; % Is this the heading error? In degrees? Guessed
     
 % As we discussed in class, analyze the response of a lane-drift
 % controller using a linear control algorithm. Assume you are 
