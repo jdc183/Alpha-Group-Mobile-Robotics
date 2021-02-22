@@ -110,22 +110,33 @@ ylabel('meters') % check that this is actually meters
 xlabel('radians') % check that this is actually radians
 
 %% Part 2: Lane-Drift Controller
+
+% Choose values for K_psi and K_offset. 
+    % Describe recommendations for controller gains.
+    K_psi = ;
+    K_offset = ;
+    
+% Choose values for initial offset and heading errors. 
+    % Describe influences of initial conditions. 
+    d_offset = ;
+    psi = ; % Is this the heading error?
+    
 % As we discussed in class, analyze the response of a lane-drift
 % controller using a linear control algorithm. Assume you are 
 % able to command a curvature, rho(lateral_offset_err, 
 % heading_err), and this control algorithm will be formulated as:
-rho = -K_offset * d_offset - K_psi * psi;
+
+rho = - K_offset * d_offset - K_psi * psi;
+
 % Note that both rho and d_offset are signed. Drifting into the 
 % left lane is defined as positive offset, and rotating 
 % counterclockwise is considered positive curvature.
 
-% The vehicle dynamics is described as: v_x = speed * cos(psi)
+% The vehicle dynamics is described as: 
+v_x = speed * cos(psi);
 v_y = speed * sin(psi);
 omega_z = speed * rho; % (= d psi/dt)
 
-% Choose values for K_psi and K_offset. 
-    % Describe recommendations for controller gains.
-% Choose values for initial offset and heading errors. 
-    % Describe influences of initial conditions. 
+
 % Simulate (and plot): x(t), y(t), psi(t) and the path x vs y.
 
