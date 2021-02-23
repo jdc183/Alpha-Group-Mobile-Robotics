@@ -92,7 +92,8 @@ for i = 1:15 % update to reflect names of data
 %     hold on
     % Populates all curve and steering data into the appropriate vectors
     allcurv = [allcurv; curvature];
-    allsteer= [allsteer; steering_angle];
+    allsteer = [allsteer; steering_angle];
+%     figure(2)
 %     plot(x,y);
 %     hold on
 end
@@ -106,8 +107,8 @@ reg = polyfit(allsteer,allcurv,1);
 sa = min(allsteer):100:max(allsteer);
 plot(sa,polyval(reg,sa));
 title('Part 1: Steering Value Related to the Steering Angle')
-ylabel('meters') % check that this is actually meters
-xlabel('radians') % check that this is actually radians
+ylabel('curvature (1/m)') % check that this is actually meters
+xlabel('steering value') % check that this is actually radians
 
 %% Part 2: Lane-Drift Controller
 close all; clear all; clc
@@ -117,12 +118,13 @@ close all; clear all; clc
     B = B * 0.0254; % inch to meter conversion
     num_B_desired = 2; % number of body lengths desired for car to stop
     K_offset = (1 / (num_B_desired * B))^2; % From notes 2/15
-    K_psi = 2*sqrt(K_offset); % From notes 2/15
+    K_psi = 2 * sqrt(K_offset); % From notes 2/15
     
 % Choose values for initial offset and heading errors. 
     % Describe influences of initial conditions. 
-    d_offset = 1/sqrt(K_offset); % From notes 2/15
-    psi = 10; % Is this the heading error in degrees. Guessed value
+    d_offset = 4; % 1/sqrt(K_offset); % From notes 2/15
+    psi = 0; % pi/24; % Is this the heading error in radians. Guessed value
+    % 4, 0 would be the case of wanting to change lanes
     
 % As we discussed in class, analyze the response of a lane-drift
 % controller using a linear control algorithm. Assume you are 
