@@ -116,7 +116,7 @@ close all; clear all; clc
     B = 226.5; % 250.5, 274.5, 286.5 Body length of car in inches from http://d3is8fue1tbsks.cloudfront.net/PDF/Ford/Ford%20f350%20450%20500%20cab%20chassis%20spec.pdf
     B = B * 0.0254; % inch to meter conversion
     num_B_desired = 2; % number of body lengths desired for car to stop
-    K_offset = (1 / (num_B_desired * B))^2; % Guessed
+    K_offset = (1 / (num_B_desired * B))^2; % From notes 2/15
     K_psi = 2*sqrt(K_offset); % From notes 2/15
     
 % Choose values for initial offset and heading errors. 
