@@ -139,7 +139,7 @@ xlabel('Steering Angle (wierd units)') % check that this is actually radians
 % Simulate (and plot): x(t), y(t), psi(t) and the path x vs y.
 
 timeStep = 0.1;%seconds
-x = [0;10;0;30];
+x = [0;-10;0;30];
 t = 0;
 len = 1;
 
