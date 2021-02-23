@@ -3,7 +3,8 @@
 % Due 24 February 2021
 
 %% Part 1: Curvature Calculation
-close all; clear all; clc % Ensures a clean working branch between runs
+%close all; clear all; clc % Ensures a clean working branch between runs
+global K_offset K_psi
     % This assignment includes multiple CSV files. 
     % These were obtained with an instrumented Ford F-550 using 
     % a GPS unit with differential corrections, a shaft-mounted 
@@ -92,8 +93,7 @@ for i = 1:15 % update to reflect names of data
 %     hold on
     % Populates all curve and steering data into the appropriate vectors
     allcurv = [allcurv; curvature];
-    allsteer = [allsteer; steering_angle];
-%     figure(2)
+    allsteer= [allsteer; steering_angle];
 %     plot(x,y);
 %     hold on
 end
@@ -106,42 +106,50 @@ hold on
 reg = polyfit(allsteer,allcurv,1);
 sa = min(allsteer):100:max(allsteer);
 plot(sa,polyval(reg,sa));
-title('Part 1: Steering Value Related to the Steering Angle')
-ylabel('curvature (1/m)') % check that this is actually meters
-xlabel('steering value') % check that this is actually radians
+title('Part 1: Curvature Related to the Steering Angle')
+ylabel('Curvature (1/meters)') % check that this is actually meters
+xlabel('Steering Angle (wierd units)') % check that this is actually radians
 
 %% Part 2: Lane-Drift Controller
-close all; clear all; clc
+
 % Choose values for K_psi and K_offset. 
+    % Describe recommendations for controller gains.
+    % Choose values for K_psi and K_offset. 
     % Describe recommendations for controller gains.
     B = 226.5; % 250.5, 274.5, 286.5 Body length of car in inches from http://d3is8fue1tbsks.cloudfront.net/PDF/Ford/Ford%20f350%20450%20500%20cab%20chassis%20spec.pdf
     B = B * 0.0254; % inch to meter conversion
-    num_B_desired = 2; % number of body lengths desired for car to stop
-    K_offset = (1 / (num_B_desired * B))^2; % From notes 2/15
-    K_psi = 2 * sqrt(K_offset); % From notes 2/15
+    num_B_desired = 7; % number of body lengths desired for car to stop
+    K_offset = (1 / (num_B_desired * B))^2; % Guessed
+    K_psi = 2*sqrt(K_offset); % From notes 2/15
+    
     
 % Choose values for initial offset and heading errors. 
     % Describe influences of initial conditions. 
-    d_offset = 4; % 1/sqrt(K_offset); % From notes 2/15
-    psi = 0; % pi/24; % Is this the heading error in radians. Guessed value
-    % 4, 0 would be the case of wanting to change lanes
-    
 % As we discussed in class, analyze the response of a lane-drift
 % controller using a linear control algorithm. Assume you are 
 % able to command a curvature, rho(lateral_offset_err, 
 % heading_err), and this control algorithm will be formulated as:
 
-rho = - K_offset * d_offset - K_psi * psi;
-
 % Note that both rho and d_offset are signed. Drifting into the 
 % left lane is defined as positive offset, and rotating 
 % counterclockwise is considered positive curvature.
 
-% The vehicle dynamics is described as: 
-%v_x = speed * cos(psi);
-%v_y = speed * sin(psi);
-%omega_z = speed * rho; % (= d psi/dt)
 
 
 % Simulate (and plot): x(t), y(t), psi(t) and the path x vs y.
 
+timeStep = 0.1;%seconds
+x = [0;10;0;30];
+t = 0;
+len = 1;
+
+while t(len) < 14
+    [slope,timeStep] = rk4(@f,@controller,x(:,len),t(len),timeStep);
+    t = [t,t(len)+timeStep];
+    x = [x,x(:,len)+slope*timeStep];
+    len = size(x,2);
+    
+end
+
+figure
+plot(x(1,:),x(2,:),'-')
