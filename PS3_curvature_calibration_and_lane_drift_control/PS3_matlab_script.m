@@ -153,3 +153,11 @@ end
 
 figure
 plot(x(1,:),x(2,:),'-')
+
+figure
+subplot(3,1,1)
+plot(t,x(1,:))
+subplot(3,1,2)
+plot(t,x(2,:))
+subplot(3,1,3)
+plot(t,x(3,:))
