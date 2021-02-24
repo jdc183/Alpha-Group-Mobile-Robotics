@@ -107,8 +107,8 @@ reg = polyfit(allsteer,allcurv,1);
 sa = min(allsteer):100:max(allsteer);
 plot(sa,polyval(reg,sa));
 title('Part 1: Curvature Related to the Steering Angle')
-ylabel('Curvature (1/meters)') % check that this is actually meters
-xlabel('Steering Angle (wierd units)') % check that this is actually radians
+ylabel('Curvature (1/meters)') 
+xlabel('Steering Angle') 
 
 %% Part 2: Lane-Drift Controller
 close all; clear all; clc % Ensures a clean working branch between runs
