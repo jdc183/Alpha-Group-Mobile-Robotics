@@ -112,34 +112,17 @@ xlabel('Steering Angle (wierd units)') % check that this is actually radians
 
 %% Part 2: Lane-Drift Controller
 close all; clear all; clc % Ensures a clean working branch between runs
-global K_offset K_psi
+
 % Choose values for K_psi and K_offset. 
     % Describe recommendations for controller gains.
-    % Choose values for K_psi and K_offset. 
-    % Describe recommendations for controller gains.
+    global K_offset K_psi
     B = 226.5; % 250.5, 274.5, 286.5 Body length of car in inches from http://d3is8fue1tbsks.cloudfront.net/PDF/Ford/Ford%20f350%20450%20500%20cab%20chassis%20spec.pdf
     B = B * 0.0254; % inch to meter conversion
     num_B_desired = 7; % number of body lengths desired for car to stop
     K_offset = (1 / (num_B_desired * B))^2; % From notes 2/15
     K_psi = 2*sqrt(K_offset); % From notes 2/15
     
-    
-% Choose values for initial offset and heading errors. 
-    % Describe influences of initial conditions. 
-% As we discussed in class, analyze the response of a lane-drift
-% controller using a linear control algorithm. Assume you are 
-% able to command a curvature, rho(lateral_offset_err, 
-% heading_err), and this control algorithm will be formulated as:
-
-% Note that both rho and d_offset are signed. Drifting into the 
-% left lane is defined as positive offset, and rotating 
-% counterclockwise is considered positive curvature.
-
-
-
-% Simulate (and plot): x(t), y(t), psi(t) and the path x vs y.
-
-timeStep = 0.1;%seconds
+timeStep = 0.1; % seconds
 x = [0;-10;0;30];
 t = 0;
 len = 1;
@@ -149,8 +132,9 @@ while t(len) < 14
     t = [t,t(len)+timeStep];
     x = [x,x(:,len)+slope*timeStep];
     len = size(x,2);
-    
 end
+
+% Simulate (and plot): x(t), y(t), psi(t) and the path x vs y.
 
 figure
 plot(x(1,:),x(2,:),'-')
@@ -161,11 +145,59 @@ title('Path of Car')
 figure
 subplot(3,1,1)
 plot(t,x(1,:))
+title('x vs t')
 ylabel('meters (m)')
 subplot(3,1,2)
 plot(t,x(2,:))
+title('y vs t')
 ylabel('meters (m)')
 subplot(3,1,3)
 plot(t,x(3,:))
 xlabel('time (s)')
 ylabel('meters (m)')
+title('psi vs t')
+
+%%%%%%%%%%% FUNCTIONS %%%%%%%%%%%%%%%%%%%
+function dxdt = f(x,u,t)
+    dxdt = zeros(3,1);
+    dxdt(1) = x(4)*cos(x(3)); % dx/dt
+    dxdt(2) = x(4)*sin(x(3)); % dy/dt
+    dxdt(3) = u(1)*x(4); % dpsi/dt
+    dxdt(4) = u(2); % scalar acceleration dspeed/dt (=0 with our controller)
+end
+
+function input = controller(x,t)
+    global K_offset K_psi
+    % Choose values for initial offset and heading errors. 
+    % Describe influences of initial conditions.
+    
+    % Note that both rho and d_offset are signed. Drifting into the 
+    % left lane is defined as positive offset, and rotating 
+    % counterclockwise is considered positive curvature.
+    
+    % As we discussed in class, analyze the response of a lane-drift
+    % controller using a linear control algorithm. Assume you are 
+    % able to command a curvature, rho(lateral_offset_err, 
+    % heading_err), and this control algorithm will be formulated as:
+    
+    d_offset = x(2);
+    psi = x(3);
+    rho = - K_offset * d_offset - K_psi * psi;
+    rho1 = - K_offset * d_offset;
+    rho2 = - K_psi * psi;
+    rho = rho1 + rho2;
+    acc = 0;
+    input = [rho acc];
+end
+
+function [slope,dt_next] = rk4(f,u,x,t,dt)
+    s1 = f(x,u(x,t),t);
+    s2 = f(x+dt*s1/2,u(x+dt*s1/2,t+dt/2),t+dt/2);
+    s3 = f(x+dt*s2/2,u(x+dt*s2/2,t+dt/2),t+dt/2);
+    s4 = f(x+dt*s3,u(x+dt*s3,t+dt),t+dt);
+    slope = (s1+2*s2+2*s3+s4)/6;
+    alpha = 0.95;
+    error = norm((x+dt*slope) - (x+dt*slope/2 + s2*dt/2));
+    R=(1e-3+(1e-4)*norm(x+slope*dt)/abs(error))^(1/(4+1));
+    dt_next = alpha*R*dt;
+end
