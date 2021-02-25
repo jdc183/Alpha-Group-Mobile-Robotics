@@ -1,4 +1,6 @@
 // Nicole Graf, Joseph Cressman, Andrew Capelli
+// This code was completed, pending range adjustment, on 2/24/21 4:34pm
+
 
 // This node should be an upgrade of the STDR LIDAR alarm.  
 // It should subscribe to the mobot’s LIDARtopic and interpret
@@ -67,7 +69,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     //scans lidar data within ping indices to find ranges
     for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
     	ping_dist_in_front_ = laser_scan.ranges[ping_index_];
-   		//ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+   		ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
    	
    		//checks if each lidar data point is within alarm distance
    		if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
@@ -77,7 +79,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
 
     //sends warning if data point trips lidar alarm
     if (laser_alarm_){
-        //ROS_WARN("GUYS ARE YOU SURE ABOUT THIS!!");
+      ROS_WARN("GUYS ARE YOU SURE ABOUT THIS!!");
     }
 
    std_msgs::Bool lidar_alarm_msg;
@@ -96,7 +98,7 @@ int main(int argc, char **argv) {
     lidar_alarm_publisher_ = pub; // let's make this global, so callback can use it
     ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("lidar_dist", 1);  
     lidar_dist_publisher_ = pub2;
-    ros::Subscriber lidar_subscriber = nh.subscribe("robot0/laser_0", 1, laserCallback);
+    ros::Subscriber lidar_subscriber = nh.subscribe("scan", 1, laserCallback);
     ros::spin(); //this is essentially a "while(1)" statement, except it
     // forces refreshing wakeups upon new data arrival
     // main program essentially hangs here, but it must stay alive to keep the callback function alive
