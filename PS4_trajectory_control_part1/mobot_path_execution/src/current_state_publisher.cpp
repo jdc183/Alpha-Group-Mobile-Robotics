@@ -1,4 +1,5 @@
 // Nicole Graf, Joseph Cressman, Andrew Capelli
+// Script completed 2/25/21 4:15pm
 
 // This node will later combine absolution pose information 
 // (e.g. from GPS or LIDAR/map-based localization) with 
@@ -28,7 +29,7 @@ int main(int argc, char **argv) {
     // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
     // odomCallback = pub2;
 
-    ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"robot0/laser_0", 1, odomCallback); // edit for mobot odom
+    ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"odom", 1, odomCallback); // edit for mobot odom
     ros::spin(); //this is essentially a "while(1)" statement, except it
     // forces refreshing wakeups upon new data arrival
     // main program essentially hangs here, but it must stay alive to keep the callback function alive
