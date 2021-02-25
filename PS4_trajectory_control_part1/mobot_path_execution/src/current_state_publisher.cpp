@@ -11,6 +11,8 @@
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
 
+ros::Publisher odom_publisher;
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "current_state_publisher"); //name this node
     ros::NodeHandle nh; 
@@ -18,10 +20,10 @@ int main(int argc, char **argv) {
     ros::Publisher pub = nh.advertise<std_msgs::Bool>("current_state", 1);
     odom_publisher = pub; // let's make this global, so callback can use it
 
-    // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odom_dist", 1);  
-    // lidar_dist_publisher_ = pub2;
+    ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
+    odomCallback = pub2;
 
-    ros::Subscriber odom_subscriber = nh.subscribe("robot0/laser_0", 1, laserCallback);
+    ros::Subscriber odom_subscriber = nh.subscribe("robot0/laser_0", 1, odomCallback); // edit for mobot odom
     ros::spin(); //this is essentially a "while(1)" statement, except it
     // forces refreshing wakeups upon new data arrival
     // main program essentially hangs here, but it must stay alive to keep the callback function alive
