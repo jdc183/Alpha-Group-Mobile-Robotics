@@ -14,7 +14,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
-#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Twist.h>
 
 //globals
 
@@ -28,9 +28,11 @@
 
 
 
-
+ros::Publisher pub;
 //callbacks
-
+void des_state_callback(const geometry_msgs::Twist data){
+	pub.publish(data);
+}
 
 
 
@@ -43,10 +45,14 @@ int main(int argc, char **argv) {
 
     // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
     // odomCallback = pub2;
+    ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel",1);
+
+    ros::Subscriber sub = nh.subscribe("des_state", 1, des_state_callback);
 
     //ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"odom", 1, odomCallback); // edit for mobot odom
     ros::spin(); //this is essentially a "while(1)" statement, except it
     // forces refreshing wakeups upon new data arrival
     // main program essentially hangs here, but it must stay alive to keep the callback function alive
+
     return 0; // should never get here, unless roscore dies
 }
