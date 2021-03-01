@@ -25,13 +25,16 @@
 #include <nav_msgs/Odometry.h>
 #include <traj_builder/traj_builder.h> //Not sure if this is the right include
 #include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Stamped_pose.h>
+#include <geometry_msgs/PoseStamped.h>
 
 
 //globals
 ros::Publisher des_state_pub;
-
-
+TrajBuilder trajBuilder;
+nav_msgs::Odometry startState;
+nav_msgs::Odometry endState;
+geometry_msgs::PoseStamped startPose;
+geometry_msgs::PoseStamped endPose;
 
 
 //helper functions
@@ -42,8 +45,35 @@ ros::Publisher des_state_pub;
 
 
 //callbacks
-bool serviceCallback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecSrvResponse& response){
+
+//Service callback takes a Twist request and responds with a Bool of success or failure
+//Not sure that Twist is the best idea for input
+bool serviceCallback(geometry_msgs::Twist& request, std_msgs::Bool& response){
+    //Set desired end pose
+    endPose.pose.position.x = request.linear.x;
+    endPose.pose.position.y = request.linear.y;
+    endPose.pose.position.z = request.linear.z;
+    endPose.pose.orientation = trajBuilder.convertPlanarPsi2Quaternion(request.angular.z);
     
+    //Set start pose - get from odom or tf somehow
+    startPose.pose.position.x = //current x position;
+    startPose.pose.position.y = //current y position;
+    startPose.pose.position.z = //current z position;
+    endPose.pose.orientation = trajBuilder.convertPlanarPsi2Quaternion(//current orientation angle);
+    
+    std::vector<nav_msgs::Odometry> vec_of_states;
+    nav_msgs::Odometry des_state;
+    //build the trajectory - I think this is how to use trajBuilder but not sure
+    //based on https://github.com/wsnewman/learning_ros_noetic/blob/main/Part_4/traj_builder/src/traj_builder_example_main.cpp 
+    trajBuilder.build_point_and_go_traj(g_start_pose, g_end_pose, vec_of_states);
+    for (int i = 0; i < vec_of_states.size(); i++){
+        des_state = vec_of_states[i];
+        des_state.header.stamp = ros::Time::now();
+        des_state_ub.publish(des_state);
+        
+        
+        looprate.sleep
+    }
     return true;
 }
 
@@ -57,14 +87,9 @@ int main(int argc, char **argv) {
     
     double dt = 0.01;
     ros::Rate looprate(1/dt);
-    TrajBuilder trajBuilder;
     trajBuilder.set_dt(dt);
     trajBuilder.set_alpha_max(1.0);
     
-    // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
-    // odomCallback = pub2;
-
-    //ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"odom", 1, odomCallback); // edit for mobot odom
     ros::spin(); //this is essentially a "while(1)" statement, except it
     // forces refreshing wakeups upon new data arrival
     // main program essentially hangs here, but it must stay alive to keep the callback function alive
