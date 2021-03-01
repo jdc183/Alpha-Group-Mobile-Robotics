@@ -23,9 +23,13 @@
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
 #include <nav_msgs/Odometry.h>
+#include <traj_builder/traj_builder.h> //Not sure if this is the right include
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Stamped_pose.h>
+
 
 //globals
-
+ros::Publisher des_state_pub;
 
 
 
@@ -38,17 +42,25 @@
 
 
 //callbacks
-
+bool serviceCallback(double_vec_srv::DblVecSrvRequest& request, double_vec_srv::DblVecSrvResponse& response){
+    
+    return true;
+}
 
 
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "current_state_publisher"); //name this node
+    ros::init(argc, argv, "des_state_publisher"); //name this node
     ros::NodeHandle nh; 
-    //create a Subscriber object and have it subscribe to the lidar topic
-    //ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("current_state", 1);
-    //odom_publisher = pub; // let's make this global, so callback can use it
-
+    ros::Publisher des_state_pub = nh.advertise<nav_msgs::Odometry>("des_state",1);
+    ros::ServiceServer service = nh.advertiseService("trajectory_planner_service", serviceCallback);
+    
+    double dt = 0.01;
+    ros::Rate looprate(1/dt);
+    TrajBuilder trajBuilder;
+    trajBuilder.set_dt(dt);
+    trajBuilder.set_alpha_max(1.0);
+    
     // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
     // odomCallback = pub2;
 
