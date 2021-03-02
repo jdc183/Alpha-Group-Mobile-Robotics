@@ -57,6 +57,7 @@
   <exec_depend>std_msgs</exec_depend>
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>traj_builder</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

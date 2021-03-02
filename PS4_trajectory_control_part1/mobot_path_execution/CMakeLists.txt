@@ -31,7 +31,7 @@ catkin_simple()
 # may add more of these lines for more nodes from the same package
 
 cs_add_executable(current_state_publisher src/current_state_publisher.cpp)
-#cs_add_executable(des_state_publisher_service src/des_state_publisher_service.cpp)
+cs_add_executable(des_state_publisher_service src/des_state_publisher_service.cpp)
 cs_add_executable(lidar_alarm src/lidar_alarm.cpp)
 cs_add_executable(modal_trajectory_controller src/modal_trajectory_controller.cpp)
 #cs_add_executable(navigation_coordinator src/navigation_coordinator.cpp)
