@@ -26,6 +26,13 @@
 #include <traj_builder/traj_builder.h> //Not sure if this is the right include
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
+// extra from newman
+#include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/terminal_state.h>
+#include <navigator/navigatorAction.h>
+#include <Eigen/Eigen>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 
 //globals
@@ -75,6 +82,25 @@ bool serviceCallback(geometry_msgs::Twist& request, std_msgs::Bool& response){
         looprate.sleep
     }
     return true;
+}
+
+// added from newman code (navigator) 
+geometry_msgs::PoseStamped g_desired_pose;
+int g_navigator_rtn_code;
+void navigatorDoneCb(const actionlib::SimpleClientGoalState& state,
+        const navigator::navigatorResultConstPtr& result) {
+    ROS_INFO(" navigatorDoneCb: server responded with state [%s]", state.toString().c_str());
+    g_navigator_rtn_code=result->return_code;
+    ROS_INFO("got object code response = %d; ",g_navigator_rtn_code);
+    if (g_navigator_rtn_code==navigator::navigatorResult::DESTINATION_CODE_UNRECOGNIZED) {
+        ROS_WARN("destination code not recognized");
+    }
+    else if (g_navigator_rtn_code==navigator::navigatorResult::DESIRED_POSE_ACHIEVED) {
+        ROS_INFO("reached desired location!");
+    }
+    else {
+        ROS_WARN("desired pose not reached!");
+    }
 }
 
 
