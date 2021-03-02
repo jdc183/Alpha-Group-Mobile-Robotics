@@ -79,7 +79,7 @@ bool serviceCallback(geometry_msgs::Twist& request, std_msgs::Bool& response){
         des_state_ub.publish(des_state);
         
         
-        looprate.sleep
+        looprate.sleep();
     }
     return true;
 }
