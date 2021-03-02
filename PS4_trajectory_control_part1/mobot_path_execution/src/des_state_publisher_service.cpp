@@ -17,6 +17,8 @@
 // spin-in-place, forward-travel, or halt (at specified final 
 // state).
 
+// throw away all queing. only accepts one point right now
+
 //dependencies
 #include <ros/ros.h> //Must include this for all ROS cpp projects
 #include <sensor_msgs/LaserScan.h>

@@ -12,6 +12,10 @@
 // incorporate path planning and path replanning 
 // (e.g. to circumvent unexpected obstacles).
 
+// where we will put the intelligence. where path planning will go and reactions to things that went wrong. for now this is just a shell.
+// watch out, positive spin requests may result in negative spins and vice versa. 
+    // temporary fix, add a negative sign
+
 //dependencies
 #include <ros/ros.h> //Must include this for all ROS cpp projects
 #include <sensor_msgs/LaserScan.h>

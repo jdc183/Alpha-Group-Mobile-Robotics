@@ -9,7 +9,7 @@
 // prepare for different control modes: spin-in-place, 
 // straight-line-motion, and halt (to be implemented later).
 
-
+//use open loop controller. print out a debug that says what mode it is in. wont effect the mode we are in at all
 //dependencies
 #include <ros/ros.h> //Must include this for all ROS cpp projects
 #include <sensor_msgs/LaserScan.h>
