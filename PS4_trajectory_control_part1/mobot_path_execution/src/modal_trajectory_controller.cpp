@@ -20,22 +20,15 @@
 //globals
 
 
-
-
-
 //helper functions
-
-
-
 
 
 ros::Publisher pub;
 //callbacks
-void des_state_callback(const geometry_msgs::Twist data){
+void des_state_callback(const geometry_msgs::Twist data){ 
+    // might have to do something to get the actual twist data. pull from odom?
 	pub.publish(data);
 }
-
-
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "current_state_publisher"); //name this node
