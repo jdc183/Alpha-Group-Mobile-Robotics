@@ -31,7 +31,7 @@ void des_state_callback(const geometry_msgs::Twist data){
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "current_state_publisher"); //name this node
+    ros::init(argc, argv, "modal_trajectory_controller"); //name this node
     ros::NodeHandle nh; 
     //create a Subscriber object and have it subscribe to the lidar topic
     //ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("current_state", 1);

@@ -58,6 +58,7 @@
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>traj_builder</depend>
+  <depend>dsp_service</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

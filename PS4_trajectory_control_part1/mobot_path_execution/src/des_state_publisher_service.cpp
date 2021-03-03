@@ -21,15 +21,15 @@
 
 //dependencies
 #include <ros/ros.h> //Must include this for all ROS cpp projects
-#include <sensor_msgs/LaserScan.h>
+#include <traj_builder/traj_builder.h> 
+#include <dsp_service/DSPService.h>
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
-#include <nav_msgs/Odometry.h>
-#include <traj_builder/traj_builder.h> //maybe need a /include/???
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <std_msgs/Header.h>
-#include <geometry_msgs/PoseWithCovariance.h>
+#include <nav_msgs/Odometry.h>
+#include <sensor_msgs/LaserScan.h>
+
 // extra from newman
 /*
 #include <actionlib/client/simple_action_client.h>
@@ -47,32 +47,22 @@ TrajBuilder trajBuilder;
 nav_msgs::Odometry startState;
 nav_msgs::Odometry endState;
 geometry_msgs::PoseStamped g_start_pose;
-geometry_msgs::PoseWithCovariance g_start_pose_CV;
 geometry_msgs::PoseStamped g_end_pose;
-const double dt = 0.01;
-ros::Rate looprate(1/dt); 
-//helper functions
-
-
-
-
-
+double dt = 0.01;
 
 //callbacks
 
 //Service callback takes a Twist request and responds with a Bool of success or failure
 //Not sure that Twist is the best idea for input
 void currentStateCallback(const nav_msgs::Odometry current){
-    g_start_pose_CV = current.pose;
     g_start_pose.pose = current.pose.pose;
     g_start_pose.header = current.header;
-
 }
 
 
-bool serviceCallback(geometry_msgs::PoseStamped& request, std_msgs::Bool& response){
+bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPServiceResponse& response){
     //Set desired end pose
-    g_end_pose = request;
+    g_end_pose = request.end_pose;
     /*
     endPose.pose.position.x = request.linear.x;
     endPose.pose.position.y = request.linear.y;
@@ -80,7 +70,7 @@ bool serviceCallback(geometry_msgs::PoseStamped& request, std_msgs::Bool& respon
     endPose.pose.orientation = trajBuilder.convertPlanarPsi2Quaternion(request.angular.z);
     */
 
-
+    ros::Rate looprate(1/dt);
 
     /*
     //Set start pose - get from odom or tf somehow
@@ -90,19 +80,22 @@ bool serviceCallback(geometry_msgs::PoseStamped& request, std_msgs::Bool& respon
     endPose.pose.orientation = trajBuilder.convertPlanarPsi2Quaternion(//current orientation angle);
     */
 
-    std::vector<nav_msgs::Odometry> vec_of_states;
+    std::vector<nav_msgs::Odometry> l_vec_of_states;
     nav_msgs::Odometry des_state;
     //build the trajectory - I think this is how to use trajBuilder but not sure
     //based on https://github.com/wsnewman/learning_ros_noetic/blob/main/Part_4/traj_builder/src/traj_builder_example_main.cpp 
-    trajBuilder.build_point_and_go_traj(g_start_pose, g_end_pose, vec_of_states);
-    for (int i = 0; i < vec_of_states.size(); i++){
-        des_state = vec_of_states[i];
+    trajBuilder.build_point_and_go_traj(g_start_pose, g_end_pose, l_vec_of_states);
+    for (int i = 0; i < l_vec_of_states.size(); i++){
+        ROS_INFO("entered service callback loop");
+        des_state = l_vec_of_states[i];
         des_state.header.stamp = ros::Time::now();
         des_state_pub.publish(des_state);
         
         
         looprate.sleep();
     }
+    response.vec_of_states = l_vec_of_states;
+
     return true;
 }
 
@@ -127,16 +120,16 @@ void navigatorDoneCb(const actionlib::SimpleClientGoalState& state,
 }
 */
 
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "des_state_publisher"); //name this node
     ros::NodeHandle nh;
+
+    ros::Rate looprate(1/dt);
 
     cur_state_sub = nh.subscribe<nav_msgs::Odometry>("current_state",1,currentStateCallback);
     ros::Publisher des_state_pub = nh.advertise<nav_msgs::Odometry>("des_state",1);
     ros::ServiceServer service = nh.advertiseService("trajectory_planner_service", serviceCallback);
     
-
     trajBuilder.set_dt(dt);
     trajBuilder.set_alpha_max(1.0);
     

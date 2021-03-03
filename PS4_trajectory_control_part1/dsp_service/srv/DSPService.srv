@@ -1,0 +1,5 @@
+#PoseStamped input
+geometry_msgs/PoseStamped end_pose
+---
+#vector of states output
+nav_msgs/Odometry[] vec_of_states

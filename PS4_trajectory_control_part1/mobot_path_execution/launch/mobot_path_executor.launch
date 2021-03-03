@@ -1,0 +1,17 @@
+<launch>
+
+	<include file="$(find mobot_urdf)/launch/mobot_in_pen.launch"/>
+
+	<node name="trajectory_planner_service" pkg="mobot_path_execution" type="des_state_publisher_service" output="screen"/>
+	
+	<node name="des_state" pkg="mobot_path_execution" type="des_state_publisher_service" output="screen"/>
+	
+	<node name="lidar_alarm" pkg="mobot_path_execution" type="lidar_alarm" output="screen"/>
+	
+	<node name="lidar_dist" pkg="mobot_path_execution" type="lidar_alarm" output="screen"/>
+	
+	<node name="current_state" pkg="mobot_path_execution" type="current_state_publisher" output="screen"/>
+	
+	<node name="cmd_vel" pkg="mobot_path_execution" type="modal_trajectory_controller" output="screen"/>
+
+</launch>
