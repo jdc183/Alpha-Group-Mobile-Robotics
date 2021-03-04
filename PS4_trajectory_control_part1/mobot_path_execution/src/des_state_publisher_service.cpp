@@ -44,18 +44,30 @@
 
 //globals
 ros::Subscriber cur_state_sub;
-ros::Publisher des_state_pub;
+ros::Subscriber lidar_alarm_sub;
+ros::Publisher *g_des_state_pub_ptr;
 TrajBuilder trajBuilder;
 nav_msgs::Odometry startState;
 nav_msgs::Odometry endState;
 geometry_msgs::PoseStamped g_start_pose;
 geometry_msgs::PoseStamped g_end_pose;
 double dt = 0.01;
-double tolerance = 0.1;
+double tolerance = 0.2;
+double angle_tolerance = 0.1;
+bool alarmStatus = false;
 
 //helper functions
 bool pointToleranceCheck(double current, double end){
     if((current<(end+tolerance)) && (current>(end-tolerance))){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+bool angleToleranceCheck(double current, double end){
+    if((current<(end+angle_tolerance)) && (current>(end-angle_tolerance))){
         return true;
     }
     else{
@@ -74,26 +86,26 @@ bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
     }
 
     if(pointToleranceCheck(current.position.z, end.position.z)){
-        score++;
+        //score++;
     }
 
-    if(pointToleranceCheck(current.orientation.x, end.orientation.x)){
-        score++;
+    if(angleToleranceCheck(current.orientation.x, end.orientation.x)){
+        //score++;
     }
 
-    if(pointToleranceCheck(current.orientation.y, end.orientation.y)){
-        score++;
+    if(angleToleranceCheck(current.orientation.y, end.orientation.y)){
+        //score++;
     }
 
-    if(pointToleranceCheck(current.orientation.z, end.orientation.z)){
-        score++;
+    if(angleToleranceCheck(current.orientation.z, end.orientation.z)){
+        //score++;
     }
 
-    if(pointToleranceCheck(current.orientation.w, end.orientation.w)){
-        score++;
+    if(angleToleranceCheck(current.orientation.w, end.orientation.w)){
+        //score++;
     }
 
-    if(score==7){
+    if(score==2){
         return true;
     }
     else{
@@ -101,37 +113,22 @@ bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
     }
 }
 
-
-
 //callbacks
-
-//Service callback takes a Twist request and responds with a Bool of success or failure
-//Not sure that Twist is the best idea for input
 void currentStateCallback(const nav_msgs::Odometry current){
     g_start_pose.pose = current.pose.pose;
     g_start_pose.header = current.header;
 }
 
+void frontAlarmCallback(const std_msgs::Bool& newAlarmStatus){
+    alarmStatus = newAlarmStatus.data;
+}
 
 bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPServiceResponse& response){
     //Set desired end pose
     g_end_pose = request.end_pose;
-    /*
-    endPose.pose.position.x = request.linear.x;
-    endPose.pose.position.y = request.linear.y;
-    endPose.pose.position.z = request.linear.z;
-    endPose.pose.orientation = trajBuilder.convertPlanarPsi2Quaternion(request.angular.z);
-    */
+    ROS_INFO("Request received: heading to (%f,%f)",g_end_pose.pose.position.x,g_end_pose.pose.position.y);
 
     ros::Rate looprate(1/dt);
-
-    /*
-    //Set start pose - get from odom or tf somehow
-    startPose.pose.position.x = //current x position;
-    startPose.pose.position.y = //current y position;
-    startPose.pose.position.z = //current z position;
-    endPose.pose.orientation = trajBuilder.convertPlanarPsi2Quaternion(//current orientation angle);
-    */
 
     std::vector<nav_msgs::Odometry> l_vec_of_states;
     nav_msgs::Odometry des_state;
@@ -139,10 +136,9 @@ bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPSe
     //based on https://github.com/wsnewman/learning_ros_noetic/blob/main/Part_4/traj_builder/src/traj_builder_example_main.cpp 
     trajBuilder.build_point_and_go_traj(g_start_pose, g_end_pose, l_vec_of_states);
     for (int i = 0; i < l_vec_of_states.size(); i++){
-        ROS_INFO("entered service callback loop");
         des_state = l_vec_of_states[i];
         des_state.header.stamp = ros::Time::now();
-        des_state_pub.publish(des_state);
+        g_des_state_pub_ptr->publish(des_state);
         
         
         looprate.sleep();
@@ -159,27 +155,6 @@ bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPSe
     return response.status;
 }
 
-// added from newman code (navigator) 
-/*
-geometry_msgs::PoseStamped g_desired_pose;
-int g_navigator_rtn_code;
-void navigatorDoneCb(const actionlib::SimpleClientGoalState& state,
-        const navigator::navigatorResultConstPtr& result) {
-    ROS_INFO(" navigatorDoneCb: server responded with state [%s]", state.toString().c_str());
-    g_navigator_rtn_code=result->return_code;
-    ROS_INFO("got object code response = %d; ",g_navigator_rtn_code);
-    if (g_navigator_rtn_code==navigator::navigatorResult::DESTINATION_CODE_UNRECOGNIZED) {
-        ROS_WARN("destination code not recognized");
-    }
-    else if (g_navigator_rtn_code==navigator::navigatorResult::DESIRED_POSE_ACHIEVED) {
-        ROS_INFO("reached desired location!");
-    }
-    else {
-        ROS_WARN("desired pose not reached!");
-    }
-}
-*/
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "des_state_publisher"); //name this node
     ros::NodeHandle nh;
@@ -187,9 +162,11 @@ int main(int argc, char **argv) {
     ros::Rate looprate(1/dt);
 
     cur_state_sub = nh.subscribe<nav_msgs::Odometry>("current_state",1,currentStateCallback);
+    lidar_alarm_sub = nh.subscribe("lidar_alarm",1,frontAlarmCallback);
     ros::Publisher des_state_pub = nh.advertise<nav_msgs::Odometry>("des_state",1);
+    g_des_state_pub_ptr = &des_state_pub;
     ros::ServiceServer service = nh.advertiseService("trajectory_planner_service", serviceCallback);
-    
+
     trajBuilder.set_dt(dt);
     trajBuilder.set_alpha_max(1.0);
     

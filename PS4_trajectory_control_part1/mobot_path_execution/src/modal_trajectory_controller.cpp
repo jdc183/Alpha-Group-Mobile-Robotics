@@ -25,29 +25,23 @@
 
 
 ros::Publisher pub;
+ros::Publisher *g_pub_ptr;
 //callbacks
 void des_state_callback(const nav_msgs::Odometry data){ 
     // might have to do something to get the actual twist data. pull from odom?
-	pub.publish(data.twist.twist);
+	g_pub_ptr->publish(data.twist.twist);
 }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "modal_trajectory_controller"); //name this node
     ros::NodeHandle nh; 
-    //create a Subscriber object and have it subscribe to the lidar topic
-    //ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("current_state", 1);
-    //odom_publisher = pub; // let's make this global, so callback can use it
 
-    // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
-    // odomCallback = pub2;
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel",1);
+    g_pub_ptr = &pub;
 
     ros::Subscriber sub = nh.subscribe("des_state", 1, des_state_callback);
 
-    //ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"odom", 1, odomCallback); // edit for mobot odom
-    ros::spin(); //this is essentially a "while(1)" statement, except it
-    // forces refreshing wakeups upon new data arrival
-    // main program essentially hangs here, but it must stay alive to keep the callback function alive
+    ros::spin(); 
 
-    return 0; // should never get here, unless roscore dies
+    return 0;
 }

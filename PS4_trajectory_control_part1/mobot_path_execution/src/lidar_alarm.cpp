@@ -54,7 +54,6 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
         // what is the index of the ping that is straight ahead?
         // BETTER would be to use transforms, which would reference how the LIDAR is mounted;
         // but this will do for simple illustration
-//        ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
         
         //Set ping indices to correspond to angles of interest
         max_ping_index = (int) ((angle_max_alarm - angle_min_)/angle_increment_);
@@ -69,7 +68,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     //scans lidar data within ping indices to find ranges
     for (int ping_index_ = min_ping_index; ping_index_ <= max_ping_index; ping_index_++){
     	ping_dist_in_front_ = laser_scan.ranges[ping_index_];
-   		ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
+   		//ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
    	
    		//checks if each lidar data point is within alarm distance
    		if (ping_dist_in_front_<range_max_alarm && ping_dist_in_front_ > range_min_alarm) {
