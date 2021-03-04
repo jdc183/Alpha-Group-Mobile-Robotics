@@ -2,4 +2,4 @@
 geometry_msgs/PoseStamped end_pose
 ---
 #Success status response
-std_msgs/Bool status
+bool status

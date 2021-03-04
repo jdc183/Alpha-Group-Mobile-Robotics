@@ -94,9 +94,8 @@ bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPSe
         
         looprate.sleep();
     }
-    response.vec_of_states = l_vec_of_states;
 
-    if(request.end_pose==g.start_pose.pose){
+    if(g_end_pose.pose == g_start_pose.pose){
         response.status = true;
     }
     else{
