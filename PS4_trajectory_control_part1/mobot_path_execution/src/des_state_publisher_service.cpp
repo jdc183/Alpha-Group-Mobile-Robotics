@@ -149,14 +149,14 @@ bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPSe
     }
 
     //need to add functionality to track lidar alarm
-    if(g_end_pose.pose == g_start_pose.pose){
+    if(poseToleranceCheck(g_start_pose.pose, g_end_pose.pose)){
         response.status = true;
     }
     else{
         response.status = false;
     }
 
-    return true;
+    return response.status;
 }
 
 // added from newman code (navigator) 

@@ -18,6 +18,7 @@
 
 //dependencies
 #include <ros/ros.h> //Must include this for all ROS cpp projects
+#include <traj_builder/traj_builder.h> 
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
@@ -35,16 +36,20 @@
 
 //globals
 ros::ServiceClient client;
-
+TrajBuilder trajBuilder;
 
 //helper functions
-
+std::vector<geometry_msgs::PoseStamped> addPose(std::vector<geometry_msgs::PoseStamped> poseVec, double x, double y, double psi){
+    geometry_msgs::PoseStamped newPose = trajBuilder.xyPsi2PoseStamped(x,y,psi);
+    poseVec.push_back(newPose);
+    return poseVec;
+}
 
 
 //callbacks
 
 
-
+//main method
 int main(int argc, char **argv) {
     ros::init(argc, argv, "navigation_coordinator"); //name this node
     ros::NodeHandle nh;
@@ -54,13 +59,35 @@ int main(int argc, char **argv) {
     dsp_service::DSPService srv;
     geometry_msgs::PoseStamped next_goal_pose;
 
-    vec_of_poses[0].pose.position.x = //x0
-    vec_of_poses[0].pose.position.y = //y0
+    ROS_INFO("Building initial vector of poses");
+    vec_of_poses[0].pose.position.x = 0.0; //x0
+    vec_of_poses[0].pose.position.y = 0.0; //y0
     vec_of_poses[0].pose.position.z = 0.0;
-    vec_of_poses[0].pose.orientation = //generate orientation quaternion
-    vec_of_poses[0].header = //generate header
+    vec_of_poses[0].pose.orientation.x = 0.0; //generate orientation quaternion
+    vec_of_poses[0].pose.orientation.y = 0.0; //generate orientation quaternion
+    vec_of_poses[0].pose.orientation.z = 0.0; //generate orientation quaternion
+    vec_of_poses[0].pose.orientation.w = 0.0; //generate orientation quaternion
+    //vec_of_poses[0].header = "placeholder";//generate header
 
-    for (int i = 0; i<vec_of_poses.size(); i++){
+    ROS_INFO("Building additonal vector of poses");
+    vec_of_poses = addPose(vec_of_poses,0,0,0);
+    vec_of_poses = addPose(vec_of_poses,5,0,0);
+    vec_of_poses = addPose(vec_of_poses,5,0,(-M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,5,-4,(-M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,5,-4,(-M_PI));
+    vec_of_poses = addPose(vec_of_poses,-5,-4,(-M_PI));
+    vec_of_poses = addPose(vec_of_poses,-5,-4,(M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,-5,4,(M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,-5,4,0);
+    vec_of_poses = addPose(vec_of_poses,-1,4,0);
+    vec_of_poses = addPose(vec_of_poses,-1,4,(M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,-1,6,(M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,-1,6,(M_PI));
+    vec_of_poses = addPose(vec_of_poses,-8,6,(M_PI));
+    vec_of_poses = addPose(vec_of_poses,-8,6,(-M_PI/2));
+    vec_of_poses = addPose(vec_of_poses,-8,-5,(-M_PI/2));
+
+    for (int i = 0; i<vec_of_poses.size(); i++) {
         next_goal_pose = vec_of_poses[i];
 
         srv.request.end_pose = next_goal_pose;
