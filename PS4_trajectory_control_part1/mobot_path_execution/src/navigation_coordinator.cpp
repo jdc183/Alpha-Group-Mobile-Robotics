@@ -22,13 +22,14 @@
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/PoseStamped.h>
 // extra from newman
-#include <actionlib/client/simple_action_client.h>
-#include <actionlib/client/terminal_state.h>
-#include <navigator/navigatorAction.h>
-#include <Eigen/Eigen>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
+// #include <actionlib/client/simple_action_client.h>
+// #include <actionlib/client/terminal_state.h>
+// #include <navigator/navigatorAction.h>
+// #include <Eigen/Eigen>
+// #include <Eigen/Dense>
+// #include <Eigen/Geometry>
 
 //globals
 
@@ -43,14 +44,21 @@
 
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "current_state_publisher"); //name this node
-    ros::NodeHandle nh; 
-    //create a Subscriber object and have it subscribe to the lidar topic
-    //ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("current_state", 1);
-    //odom_publisher = pub; // let's make this global, so callback can use it
+    ros::init(argc, argv, "navigation_coordinator"); //name this node
+    ros::NodeHandle nh;
+    client = n.serviceClient<dsp_service::DSPService>("trajectory_planner_service"); //establish spin service client connection
 
-    // ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("odomCallback", 1);  
-    // odomCallback = pub2;
+    std::vector<geometry_msgs::PoseStamped> vec_of_poses;
+    dsp_service::DSPService srv;
+    geometry_msgs::PoseStamped next_goal_pose;
+
+    for (int i = 0; i<vec_of_poses.size(); i++){
+        next_goal_pose = vec_of_poses[i];
+
+        srv.request.end_pose = next_goal_pose;
+
+        while(!client.call(srv)) ROS_INFO("Failed to reach vertex for some reason, trying again.");
+    }
 
     //ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"odom", 1, odomCallback); // edit for mobot odom
     ros::spin(); //this is essentially a "while(1)" statement, except it
@@ -63,6 +71,7 @@ int main(int argc, char **argv) {
 // example_navigator_action_client: 
 // wsn, April, 2016
 // illustrates use of navigator action server called "navigatorActionServer"
+/*
 int main(int argc, char** argv) {
     ros::init(argc, argv, "example_navigator_action_client"); // name this node 
     ros::NodeHandle nh; //standard ros node handle    
@@ -95,4 +104,4 @@ int main(int argc, char** argv) {
         }
         
     return 0;
-}
+}*/
