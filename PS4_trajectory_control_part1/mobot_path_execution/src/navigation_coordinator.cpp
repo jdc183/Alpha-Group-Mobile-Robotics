@@ -54,6 +54,12 @@ int main(int argc, char **argv) {
     dsp_service::DSPService srv;
     geometry_msgs::PoseStamped next_goal_pose;
 
+    vec_of_poses[0].pose.position.x = //x0
+    vec_of_poses[0].pose.position.y = //y0
+    vec_of_poses[0].pose.position.z = 0.0;
+    vec_of_poses[0].pose.orientation = //generate orientation quaternion
+    vec_of_poses[0].header = //generate header
+
     for (int i = 0; i<vec_of_poses.size(); i++){
         next_goal_pose = vec_of_poses[i];
 
