@@ -15,6 +15,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
 #include <std_msgs/Bool.h> // boolean message 
+#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 
 //globals
@@ -25,9 +26,9 @@
 
 ros::Publisher pub;
 //callbacks
-void des_state_callback(const geometry_msgs::Twist data){ 
+void des_state_callback(const nav_msgs::Odometry data){ 
     // might have to do something to get the actual twist data. pull from odom?
-	pub.publish(data);
+	pub.publish(data.twist.twist);
 }
 
 int main(int argc, char **argv) {
