@@ -24,7 +24,9 @@
 #include <traj_builder/traj_builder.h> 
 #include <dsp_service/DSPService.h>
 #include <std_msgs/Float32.h> //Including the Float32 class from std_msgs
+#include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h> // boolean message 
+#include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
@@ -49,6 +51,57 @@ nav_msgs::Odometry endState;
 geometry_msgs::PoseStamped g_start_pose;
 geometry_msgs::PoseStamped g_end_pose;
 double dt = 0.01;
+double tolerance = 0.1;
+
+//helper functions
+bool pointToleranceCheck(double current, double end){
+    if((current<(end+tolerance)) && (current>(end-tolerance))){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
+    int score=0;
+    if(pointToleranceCheck(current.position.x, end.position.x)){
+        score++;
+    }
+
+    if(pointToleranceCheck(current.position.y, end.position.y)){
+        score++;
+    }
+
+    if(pointToleranceCheck(current.position.z, end.position.z)){
+        score++;
+    }
+
+    if(pointToleranceCheck(current.orientation.x, end.orientation.x)){
+        score++;
+    }
+
+    if(pointToleranceCheck(current.orientation.y, end.orientation.y)){
+        score++;
+    }
+
+    if(pointToleranceCheck(current.orientation.z, end.orientation.z)){
+        score++;
+    }
+
+    if(pointToleranceCheck(current.orientation.w, end.orientation.w)){
+        score++;
+    }
+
+    if(score==7){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+
 
 //callbacks
 
@@ -95,6 +148,7 @@ bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPSe
         looprate.sleep();
     }
 
+    //need to add functionality to track lidar alarm
     if(g_end_pose.pose == g_start_pose.pose){
         response.status = true;
     }

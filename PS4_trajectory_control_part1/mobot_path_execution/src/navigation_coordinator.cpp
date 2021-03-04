@@ -23,6 +23,8 @@
 #include <std_msgs/Bool.h> // boolean message 
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <dsp_service/DSPService.h>
+
 // extra from newman
 // #include <actionlib/client/simple_action_client.h>
 // #include <actionlib/client/terminal_state.h>
@@ -32,7 +34,7 @@
 // #include <Eigen/Geometry>
 
 //globals
-
+ros::ServiceClient client;
 
 
 //helper functions
@@ -46,7 +48,7 @@
 int main(int argc, char **argv) {
     ros::init(argc, argv, "navigation_coordinator"); //name this node
     ros::NodeHandle nh;
-    client = n.serviceClient<dsp_service::DSPService>("trajectory_planner_service"); //establish spin service client connection
+    client = nh.serviceClient<dsp_service::DSPService>("trajectory_planner_service"); //establish spin service client connection
 
     std::vector<geometry_msgs::PoseStamped> vec_of_poses;
     dsp_service::DSPService srv;
