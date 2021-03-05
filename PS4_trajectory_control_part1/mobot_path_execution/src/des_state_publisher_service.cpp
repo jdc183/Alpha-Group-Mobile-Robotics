@@ -126,7 +126,7 @@ void frontAlarmCallback(const std_msgs::Bool& newAlarmStatus){
 bool serviceCallback(dsp_service::DSPServiceRequest& request, dsp_service::DSPServiceResponse& response){
     //Set desired end pose
     g_end_pose = request.end_pose;
-    ROS_INFO("Request received: heading to (%f,%f)",g_end_pose.pose.position.x,g_end_pose.pose.position.y);
+    ROS_INFO("[DES_STATE] Request received: heading to (%f,%f)",g_end_pose.pose.position.x,g_end_pose.pose.position.y);
 
     ros::Rate looprate(1/dt);
 

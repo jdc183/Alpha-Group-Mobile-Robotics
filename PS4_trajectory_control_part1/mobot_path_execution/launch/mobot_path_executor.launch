@@ -2,6 +2,8 @@
 
 	<include file="$(find mobot_urdf)/launch/mobot_in_pen.launch"/>
 
+	<node name="navigation_coordinator" pkg="mobot_path_execution" type="navigation_coordinator" output="screen"/>
+
 	<node name="trajectory_planner_service" pkg="mobot_path_execution" type="des_state_publisher_service" output="screen"/>
 	
 	<node name="des_state" pkg="mobot_path_execution" type="des_state_publisher_service" output="screen"/>

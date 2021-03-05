@@ -32,12 +32,8 @@ TrajBuilder trajBuilder;
 
 //helper functions
 std::vector<geometry_msgs::PoseStamped> addPose(std::vector<geometry_msgs::PoseStamped> poseVec, double x, double y, double psi){
-    ROS_INFO("entered addPose");
-    ROS_INFO("creating new PoseStamped");
     geometry_msgs::PoseStamped newPose = trajBuilder.xyPsi2PoseStamped(x,y,psi);
-    ROS_INFO("pushing onto poseVec");
     poseVec.push_back(newPose); 
-    ROS_INFO("returning poseVec");
     return poseVec;
 }
 
@@ -81,13 +77,15 @@ int main(int argc, char **argv) {
     vec_of_poses = addPose(vec_of_poses,-8,5,(-M_PI/2));
 
 
+    ros::Duration(10.0).sleep();
+
     for (int i = 0; i<vec_of_poses.size(); i++) {
         next_goal_pose = vec_of_poses[i];
 
         srv.request.end_pose = next_goal_pose;
 
-        ROS_INFO("Requesting to move to (%f,%f)",next_goal_pose.pose.position.x,next_goal_pose.pose.position.y);
-        while(!client.call(srv)) ROS_INFO("Failed to reach vertex (%f,%f) for some reason, trying again...",next_goal_pose.pose.position.x,next_goal_pose.pose.position.y);
+        ROS_INFO("[NAV] Requesting to move to (%f,%f)",next_goal_pose.pose.position.x,next_goal_pose.pose.position.y);
+        while(!client.call(srv)) ROS_INFO("[NAV] Failed to reach vertex (%f,%f) for some reason, trying again...",next_goal_pose.pose.position.x,next_goal_pose.pose.position.y);
     }
 
     //ros::Subscriber odom_subscriber = nh.subscribe(/*mobot/odom*/"odom", 1, odomCallback); // edit for mobot odom
