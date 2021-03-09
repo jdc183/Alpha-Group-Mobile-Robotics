@@ -7,7 +7,7 @@ find_package(catkin_simple REQUIRED)
 #find_package(OpenCV REQUIRED)
 
 #uncomment the next line to use the point-cloud library
-#find_package(PCL 1.10 REQUIRED)
+#find_package(PCL 1.8 REQUIRED)
 
 #uncomment the following 4 lines to use the Eigen library
 #find_package(cmake_modules REQUIRED)
@@ -32,7 +32,7 @@ catkin_simple()
 
 cs_add_executable(current_state_publisher src/current_state_publisher.cpp)
 cs_add_executable(des_state_publisher_service src/des_state_publisher_service.cpp)
-cs_add_executable(lidar_alarm src/lidar_alarm.cpp)
+cs_add_executable(lidar_alarm2 src/lidar_alarm2.cpp)
 cs_add_executable(modal_trajectory_controller src/modal_trajectory_controller.cpp)
 cs_add_executable(navigation_coordinator src/navigation_coordinator.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
