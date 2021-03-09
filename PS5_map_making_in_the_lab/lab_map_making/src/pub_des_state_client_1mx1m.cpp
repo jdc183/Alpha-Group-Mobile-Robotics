@@ -1,3 +1,7 @@
+// Nicole Graf, Joseph Cressman, Andrew Capelli
+// edited for a desired 1x1m  instead of 3x3m
+// Script completed 3/9/21 11:50 AM
+
 //pub_des_state_path_client:
 // illustrates how to send a request to the append_path_queue_service service
 // this one is a 3mx3m square path
@@ -37,7 +41,7 @@ int main(int argc, char **argv) {
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header.frame_id = "world";
     geometry_msgs::Pose pose;
-    pose.position.x = 3.0; // say desired x-coord is 3
+    pose.position.x = 1.0; // say desired x-coord is 1
     pose.position.y = 0.0;
     pose.position.z = 0.0; // let's hope so!
     quat = convertPlanarPhi2Quaternion(0);
@@ -45,7 +49,7 @@ int main(int argc, char **argv) {
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
  
-    pose.position.y = 3.0;
+    pose.position.y = 1.0; // say desired y-coord is 1
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
 
