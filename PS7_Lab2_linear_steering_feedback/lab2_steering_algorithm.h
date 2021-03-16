@@ -25,7 +25,7 @@
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
- #include <tf/transform_listener.h>
+#include <tf/transform_listener.h>
 
 //Eigen is useful for linear algebra
 //#include <Eigen/Eigen>
@@ -33,19 +33,40 @@
 //#include <Eigen/Core>
 //#include <Eigen/LU>
 
+// SERIOUSLY ADD INTEGRAL COMPONENTS LAST
+
 const double UPDATE_RATE = 50.0; // choose the desired-state publication update rate
 const double K_PHI= 10.0; // control gains for steering
 const double K_PHI_D = 4.0; // NG control gain to dampen the spin controller. guessed the value. 
-const double K_DISP = 3.0;
+const double K_PHI_I = 0.0; // NG control gain to INTEGRATE the spin controller. guessed the value. 
+    //CONTROLLER CONTINUES TO ACCUMULATE ERROR (int_heading_error) THE LONGER IT SITS THERE. IF MOTORS ARE OFF IT WILL ACCUMULATE TO INF AND ROBOT WILL LURCH. MAKE SURE TO FLUSH THESE TERMS BEFORE ROBOT IS TURNED ON!
+    // NEVER LET THESE VALUES GET TOO LARGE; ANTIWINDUP. MAKE A SATURATION FUNCTION THAT LIMITS MAX. CAN USE EXACT SAME FUNCTION AS THE ONE THAT LIMITS ANG VEL PROVIDED IN CODE (LINE 243 ODOM)
+    // HUNTING: RAMPS UP TORQUE UNTIL IT BREAKS FREE AND WILL OVERSHOOT BACK AND FORTH (WITH COULOMB FRICTION). DEAL WITH THIS BY MODIFYING IT TO ADD IN DEADBAN (IF STATEMENTS)
+
+// USE CONTROL THEORY POLE PLACEMENT FOR VALUES OF K_PHIS. HAVE TO KNOW SOMETHING ABOUT THE INERTIA TO DO THIS
+// CAN START AT 0 AND ADD P, D, AND I MANUALLY IF WE WANT TO AVOID THE DYNAMIC MODEL
+// MODEL IN GAZEBO IS NOT ACCURATE AT ALL. IF WE TUNE IT WITH GAZEBO IT WILL BE WRONG
+// TREAT ROBOT AS A UNIFORM MASS RECT PRISM THAT WEIGHS 300 LBS DIMENSIONS FROM GAZEBO AND FIND THE ROTATIONAL INERTIA OF THE RECT PILLAR 0.5MR^2
+// M = 150 KG, R = 0.3 M. WHEN TUNING ROTATION ALL WE NEED IS THE ROTATIONAL INERTIAL.
+// ALSO NEED THE EQUIVALENT MOTOR TORQUE PER A GIVEN COMMAND. DEPENDS ON MOTOR TORQUE, VELOCITY GAIN WE HAVE FROM OTHER CONTROLLER, AND GEAR RATIO. 
+// TO FIND THIS MAGIC NUMBER, WE WILL NEED TO HAVE THE ROBOT MOVE WITH A SINUSOIDAL COMMAND FOR... CANT DO THIS IN LAB TIME
+
+// GUESS AND CHECK WITH K_PHI THEN ADD K_PHI_D, THEN END WITH K_PHI_I
+// RUN THROUGH PROJECT AND PROCESS WITH GAZEBO BUT KNOW THAT YOU WILL END UP WITH DIFFERENT GAINS FOR REAL ROBOT
+const double K_DISP = 3.0; 
 const double K_TRIP_DIST = 1.0;
+const double K_TRIP_DIST_I = 0.0; // ADD SLOWLY AND BE CAREFUL OF: 
+    //CONTROLLER CONTINUES TO ACCUMULATE ERROR (int_trip_dist_error) THE LONGER IT SITS THERE. IF MOTORS ARE OFF IT WILL ACCUMULATE TO INF AND ROBOT WILL LURCH. MAKE SURE TO FLUSH THESE TERMS BEFORE ROBOT IS TURNED ON!
+    // NEVER LET THESE VALUES GET TOO LARGE; ANTIWINDUP. MAKE A SATURATION FUNCTION THAT LIMITS MAX. CAN USE EXACT SAME FUNCTION AS THE ONE THAT LIMITS ANG VEL PROVIDED IN CODE (LINE 243 ODOM)
+    // HUNTING: RAMPS UP TORQUE UNTIL IT BREAKS FREE AND WILL OVERSHOOT BACK AND FORTH (WITH COULOMB FRICTION). DEAL WITH THIS BY MODIFYING IT TO ADD IN DEADBAN (IF STATEMENTS)
+
 // dynamic limitations:  these apply to the steering controller; they may be larger than the limits on des state generation
 const double MAX_SPEED = 1.0; // m/sec; adjust this
 const double MAX_OMEGA = 1.0; //1.0; // rad/sec; adjust this
 
 
 // define a class, including a constructor, member variables and member functions
-class SteeringController
-{
+class SteeringController 
 public:
     SteeringController(ros::NodeHandle* nodehandle); //"main" will need to instantiate a ROS nodehandle, then pass it to the constructor
     // may choose to define public methods or public variables, if desired
