@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <cmath> 
 
 #include <ros/ros.h> //ALWAYS need to include this
 
@@ -64,6 +65,9 @@ const double K_TRIP_DIST_I = 0.0; // ADD SLOWLY AND BE CAREFUL OF:
 const double MAX_SPEED = 1.0; // m/sec; adjust this
 const double MAX_OMEGA = 1.0; //1.0; // rad/sec; adjust this
 
+const int HALT = 0;
+const int SPIN_IN_PLACE = 1;
+const int LANE_DRIFT = 2;
 
 // define a class, including a constructor, member variables and member functions
 class SteeringController 
@@ -93,6 +97,8 @@ private:
     geometry_msgs::TwistStamped twist_cmd2_;    
     double current_speed_des_;
     double current_omega_des_;
+
+    int mode;
     
 
     //state values from odometry; these will get filled in by odom callback
