@@ -56,6 +56,7 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
     current_omega_des_ = 0.0;    
     des_state_.twist.twist.linear.x = current_speed_des_; // but specified desired twist = 0.0
     des_state_.twist.twist.angular.z = current_omega_des_;
+	
     des_state_.header.stamp = ros::Time::now();   
 
     //initialize the twist command components, all to zero
@@ -68,6 +69,19 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
 
     twist_cmd2_.twist = twist_cmd_; // copy the twist command into twist2 message
     twist_cmd2_.header.stamp = ros::Time::now(); // look up the time and put it in the header  
+    	
+	//More Lab 7 Additions
+	if(std::abs(current_speed_des) < 0.001){
+		if(std::abs(current_omega_des_) < 0.001){
+			mode = HALT;
+		}
+		else{
+			mode = SPIN_IN_PLACE;
+		}
+	}
+	else{
+		mode = LANE_DRIFT;
+	}
 
 }
 
@@ -227,30 +241,44 @@ void SteeringController::lin_steering_algorithm() {
    
 // LAB 7 CHANGES 
     // do something clever with this information  
+	
+	
+	switch (mode){
 // NEED A SWITCH CASE STATEMENT FOR WHEN TO USE THE CORRECT METHOD
-    //if spinning in place
-	    controller_speed = 0;
+		case HALT:
+	    		controller_speed = 0;
+			controller_omega = 0;
+			break;
+			
+		case SPIN_IN_PLACE:
+			controller_speed = 0;
+			int_heading_error += heading_err * dt; 
+	    		controller_omega = des_state_omega_ + K_PHI*heading_err + K_PHI_D * (des_state_omega_- odom_omega_) + K_PHI_I * int_heading_error; // SPIN IN PLACE ALGORITHM
+	    		//want to add another term k_phi * int_heading_error for integral error feedback
+	    		// add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
+			break;
+		case LANE_DRIFT:
 	//if moving straight forward
-	    int_trip_dist_error += trip_dist_err * dt; 
-	    controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err + K_TRIP_DIST_I * int_trip_dist_error; //speed up/slow down to null out 
-	        //K_TRIP_DIST WILL LET US GET CLOSE TO AN OBJECT. IF TOO LOW, WE WILL BE FAR, AND IF TOO HIGH WE WILL BUMP INTO STUFF AND BE TOO CLOSE.
-	        //K_TRIP_DIST IS A DIFFERENCE OF A DISTANCE. DES_STATE_VEL_ MATCHES THE ROBOT VEL WITH THE DESIRED VEL
-	    // WILL ONLY USE LINE 227 IF IN MOVE FORWARD MODE
-	//end switch
+	    		int_trip_dist_error += trip_dist_err * dt;
+			int_heading_error += heading_err * dt;//Not sure if we want this here, but it's fine for now
+			
+	    		controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err + K_TRIP_DIST_I * int_trip_dist_error; //speed up/slow down to null out
+			//K_TRIP_DIST WILL LET US GET CLOSE TO AN OBJECT. IF TOO LOW, WE WILL BE FAR, AND IF TOO HIGH WE WILL BUMP INTO STUFF AND BE TOO CLOSE.
+	        	//K_TRIP_DIST IS A DIFFERENCE OF A DISTANCE. DES_STATE_VEL_ MATCHES THE ROBOT VEL WITH THE DESIRED VEL
+			controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err + K_PHI_I * int_heading_error; // MOVE ALONG LINE SEGMENT ALGORITHM. LINEAR CONTROL FOR STEERING.
+			//PERFORMS LANE DRIFT CORRECTION - BUT IS IT DOING GOOD ENOUGH? TUNE BY CHANGING GAINS
+			
+			//want to add another term k_phi * int_heading_error for integral error feedback
+			break;
+
+	}
 	    
-//Do we need the line that comes after this one to be uncommented?
     //controller_omega = des_state_omega_; //ditto
 
-// NEED A SWITCH CASE STATEMENT FOR WHEN TO USE THE CORRECT METHOD
-    //if moving straight forward
-	    controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err; // MOVE ALONG LINE SEGMENT ALGORITHM. LINEAR CONTROL FOR STEERING. 
-	        //PERFORMS LANE DRIFT CORRECTION - BUT IS IT DOING GOOD ENOUGH? TUNE BY CHANGING GAINS
-	//if spinning in place
-	    int_heading_error += heading_err * dt; 
-	    controller_omega = des_state_omega_ + K_PHI*heading_err + K_PHI_D * (des_state_omega_- odom_omega_) + K_PHI_I * int_heading_error; // SPIN IN PLACE ALGORITHM
-	        //want to add another term k_phi * int_heading_error for integral error feedback
-	    // add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
-	//end switch
+
+	// add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
+	
+	
 // END LAB 7 CHANGES
 
     controller_omega = MAX_OMEGA*sat(controller_omega/MAX_OMEGA); // saturate omega command at specified limits
