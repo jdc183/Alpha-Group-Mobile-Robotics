@@ -191,6 +191,10 @@ void SteeringController::lin_steering_algorithm() {
     double heading_err;  
     double lateral_err;
     double trip_dist_err; // error is scheduling...are we ahead or behind?
+
+    //Lab 7 additions
+    double int_trip_dist_error;
+    double int_heading_error;
     
 
     // have access to: des_state_vel_, des_state_omega_, des_state_x_, des_state_y_, des_state_phi_ and corresponding odom values    
@@ -224,20 +228,29 @@ void SteeringController::lin_steering_algorithm() {
 // LAB 7 CHANGES 
     // do something clever with this information  
 // NEED A SWITCH CASE STATEMENT FOR WHEN TO USE THE CORRECT METHOD
-    controller_speed = 0;
-    int_trip_dist_error += trip_dist_err * dt; // add other stuff to initialize this 
-    controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err + K_TRIP_DIST_I * int_trip_dist_error; //speed up/slow down to null out 
-        //K_TRIP_DIST WILL LET US GET CLOSE TO AN OBJECT. IF TOO LOW, WE WILL BE FAR, AND IF TOO HIGH WE WILL BUMP INTO STUFF AND BE TOO CLOSE.
-        //K_TRIP_DIST IS A DIFFERENCE OF A DISTANCE. DES_STATE_VEL_ MATCHES THE ROBOT VEL WITH THE DESIRED VEL
-    // WILL ONLY USE LINE 227 IF IN MOVE FORWARD MODE
+    //if spinning in place
+	    controller_speed = 0;
+	//if moving straight forward
+	    int_trip_dist_error += trip_dist_err * dt; 
+	    controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err + K_TRIP_DIST_I * int_trip_dist_error; //speed up/slow down to null out 
+	        //K_TRIP_DIST WILL LET US GET CLOSE TO AN OBJECT. IF TOO LOW, WE WILL BE FAR, AND IF TOO HIGH WE WILL BUMP INTO STUFF AND BE TOO CLOSE.
+	        //K_TRIP_DIST IS A DIFFERENCE OF A DISTANCE. DES_STATE_VEL_ MATCHES THE ROBOT VEL WITH THE DESIRED VEL
+	    // WILL ONLY USE LINE 227 IF IN MOVE FORWARD MODE
+	//end switch
+	    
+//Do we need the line that comes after this one to be uncommented?
     //controller_omega = des_state_omega_; //ditto
-        int_heading_error += heading_err * dt; // add other stuff to initialize this 
+
 // NEED A SWITCH CASE STATEMENT FOR WHEN TO USE THE CORRECT METHOD
-    controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err; // MOVE ALONG LINE SEGMENT ALGORITHM. LINEAR CONTROL FOR STEERING. 
-        //PERFORMS LANE DRIFT CORRECTION - BUT IS IT DOING GOOD ENOUGH? TUNE BY CHANGING GAINS
-    controller_omega = des_state_omega_ + K_PHI*heading_err + K_PHI_D * (des_state_omega_- odom_omega_) + K_PHI_I * int_heading_error; // SPIN IN PLACE ALGORITHM
-        //want to add another term k_phi * int_heading_error for integral error feedback
-    // add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
+    //if moving straight forward
+	    controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err; // MOVE ALONG LINE SEGMENT ALGORITHM. LINEAR CONTROL FOR STEERING. 
+	        //PERFORMS LANE DRIFT CORRECTION - BUT IS IT DOING GOOD ENOUGH? TUNE BY CHANGING GAINS
+	//if spinning in place
+	    int_heading_error += heading_err * dt; 
+	    controller_omega = des_state_omega_ + K_PHI*heading_err + K_PHI_D * (des_state_omega_- odom_omega_) + K_PHI_I * int_heading_error; // SPIN IN PLACE ALGORITHM
+	        //want to add another term k_phi * int_heading_error for integral error feedback
+	    // add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
+	//end switch
 // END LAB 7 CHANGES
 
     controller_omega = MAX_OMEGA*sat(controller_omega/MAX_OMEGA); // saturate omega command at specified limits
