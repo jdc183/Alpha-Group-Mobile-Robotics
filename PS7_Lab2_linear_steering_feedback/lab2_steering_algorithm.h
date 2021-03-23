@@ -68,9 +68,11 @@ const double MAX_OMEGA = 1.0; //1.0; // rad/sec; adjust this
 const int HALT = 0;
 const int SPIN_IN_PLACE = 1;
 const int LANE_DRIFT = 2;
+const double dt = 0.1; //placeholder
 
 // define a class, including a constructor, member variables and member functions
 class SteeringController 
+{
 public:
     SteeringController(ros::NodeHandle* nodehandle); //"main" will need to instantiate a ROS nodehandle, then pass it to the constructor
     // may choose to define public methods or public variables, if desired

@@ -56,6 +56,9 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
     current_omega_des_ = 0.0;    
     des_state_.twist.twist.linear.x = current_speed_des_; // but specified desired twist = 0.0
     des_state_.twist.twist.angular.z = current_omega_des_;
+
+
+
 	
     des_state_.header.stamp = ros::Time::now();   
 
@@ -71,16 +74,19 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
     twist_cmd2_.header.stamp = ros::Time::now(); // look up the time and put it in the header  
     	
 	//More Lab 7 Additions
-	if(std::abs(current_speed_des) < 0.001){
-		if(std::abs(current_omega_des_) < 0.001){
+	if(std::abs(des_state_vel_) < 0.001){
+		if(std::abs(des_state_omega_) < 0.001){
 			mode = HALT;
+            ROS_INFO("MODE: HALT");
 		}
 		else{
 			mode = SPIN_IN_PLACE;
+            ROS_INFO("MODE: SPIN");
 		}
 	}
 	else{
 		mode = LANE_DRIFT;
+        ROS_INFO("MODE: GO");
 	}
 
 }
@@ -242,15 +248,17 @@ void SteeringController::lin_steering_algorithm() {
 // LAB 7 CHANGES 
     // do something clever with this information  
 	
-	
+	ROS_INFO("ENTERING SWITCH");
 	switch (mode){
 // NEED A SWITCH CASE STATEMENT FOR WHEN TO USE THE CORRECT METHOD
 		case HALT:
-	    		controller_speed = 0;
+            ROS_INFO("HALTING");
+	    	controller_speed = 0;
 			controller_omega = 0;
 			break;
 			
 		case SPIN_IN_PLACE:
+            ROS_INFO("SPINNING");
 			controller_speed = 0;
 			int_heading_error += heading_err * dt; 
 	    		controller_omega = des_state_omega_ + K_PHI*heading_err + K_PHI_D * (des_state_omega_- odom_omega_) + K_PHI_I * int_heading_error; // SPIN IN PLACE ALGORITHM
@@ -258,8 +266,9 @@ void SteeringController::lin_steering_algorithm() {
 	    		// add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
 			break;
 		case LANE_DRIFT:
+            ROS_INFO("GOING");
 	//if moving straight forward
-	    		int_trip_dist_error += trip_dist_err * dt;
+	    	int_trip_dist_error += trip_dist_err * dt;
 			int_heading_error += heading_err * dt;//Not sure if we want this here, but it's fine for now
 			
 	    		controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err + K_TRIP_DIST_I * int_trip_dist_error; //speed up/slow down to null out
@@ -270,6 +279,8 @@ void SteeringController::lin_steering_algorithm() {
 			
 			//want to add another term k_phi * int_heading_error for integral error feedback
 			break;
+        default:
+            ROS_INFO("NO STATE ASSIGNED");
 
 	}
 	    
@@ -305,6 +316,7 @@ int main(int argc, char** argv)
    
     ROS_INFO:("starting steering algorithm");
     while (ros::ok()) {
+
         steeringController.lin_steering_algorithm(); // compute and publish twist commands and cmd_vel and cmd_vel_stamped
 
         ros::spinOnce();
