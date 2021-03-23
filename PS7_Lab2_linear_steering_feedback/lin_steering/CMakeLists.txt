@@ -7,7 +7,7 @@ find_package(catkin_simple REQUIRED)
 #find_package(OpenCV REQUIRED)
 
 #uncomment the next line to use the point-cloud library
-#find_package(PCL 1.7 REQUIRED)
+#find_package(PCL 1.10 REQUIRED)
 
 #uncomment the following 4 lines to use the Eigen library
 find_package(cmake_modules REQUIRED)
@@ -30,7 +30,7 @@ catkin_simple()
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
 cs_add_executable(lin_steering_wrt_odom src/lin_steering_wrt_odom.cpp)
-cs_add_executable(lin_steering_wrt_odom src/lab2_lin_steering_wrt_odom.cpp)
+cs_add_executable(lab2_lin_steering_wrt_odom src/lab2_lin_steering_wrt_odom.cpp)
 cs_add_executable(lin_steering_wrt_amcl src/lin_steering_wrt_amcl.cpp)
 cs_add_executable(lin_steering_wrt_amcl_and_odom src/lin_steering_wrt_amcl_and_odom.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
