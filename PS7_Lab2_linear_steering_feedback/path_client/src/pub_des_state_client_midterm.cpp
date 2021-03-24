@@ -15,7 +15,7 @@
 #include <geometry_msgs/PoseStamped.h>
 using namespace std;
 
-distRobotFrontToCenter = 0.5;//This is a guess, we need to know how far the front of the robot is from its origin
+double distRobotFrontToCenter = 0.5;//This is a guess, we need to know how far the front of the robot is from its origin
 
 geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
     geometry_msgs::Quaternion quaternion;
