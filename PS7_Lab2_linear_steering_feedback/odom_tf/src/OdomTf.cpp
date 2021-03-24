@@ -3,6 +3,7 @@
 //implementation of member functions of OdomTf class
 
 // adjusting file to eliminate drifty odom and use just odom
+// changes for this are outlined in 22 mach 2021 lecture
 
 #include <odom_tf/odom_tf.h>
 using namespace std;
@@ -71,12 +72,12 @@ OdomTf::OdomTf(ros::NodeHandle* nodehandle) : nh_(*nodehandle) { // constructor
     //initialize an odometry frame coincident with map and base-link
     stfDriftyOdomWrtMap_ = stfAmclBaseLinkWrtMap_;
     stfDriftyOdomWrtMap_.frame_id_ = "map"; // declare the respective frames
-    stfDriftyOdomWrtMap_.child_frame_id_ = "drifty_odom"; 
+    stfDriftyOdomWrtMap_.child_frame_id_ = "odom"; 
 
-    odom_subscriber_ = nh_.subscribe("/drifty_odom", 1, &OdomTf::odomCallback, this); //subscribe to odom messages
+    odom_subscriber_ = nh_.subscribe("/odom", 1, &OdomTf::odomCallback, this); //subscribe to odom messages
 
-    //wait for drifty odom publication:
-    ROS_WARN("waiting for drifty_odom publication");
+    //wait for odom publication:
+    ROS_WARN("waiting for odom publication");
     odom_count_=0;
     odom_phi_ = 1000.0; // put in impossible value for heading; test this value to make sure we have received a viable odom message
     ROS_INFO("waiting for valid odom message...");
@@ -102,13 +103,13 @@ OdomTf::OdomTf(ros::NodeHandle* nodehandle) : nh_(*nodehandle) { // constructor
 
 void OdomTf::initializeSubscribers() {
     ROS_INFO("Initializing Subscribers");
-    odom_subscriber_ = nh_.subscribe("/drifty_odom", 1, &OdomTf::odomCallback, this); //subscribe to odom messages
+    odom_subscriber_ = nh_.subscribe("/odom", 1, &OdomTf::odomCallback, this); //subscribe to odom messages
     amcl_subscriber_ = nh_.subscribe("/amcl_pose", 1, &OdomTf::amclCallback, this); //subscribe to odom messages
 
     // add more subscribers here, as needed
 }
 
-//callback fnc based on drifty_odom
+//callback fnc based on odom
 void OdomTf::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     odom_count_++;
     // copy some of the components of the received message into member vars
@@ -138,10 +139,10 @@ void OdomTf::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     q.setZ(odom_quat_.z);
     q.setW(odom_quat_.w);
     stfBaseLinkWrtDriftyOdom_.setRotation(q);
-    stfBaseLinkWrtDriftyOdom_.frame_id_ = "drifty_odom";
+    stfBaseLinkWrtDriftyOdom_.frame_id_ = "odom";
     stfBaseLinkWrtDriftyOdom_.child_frame_id_ = "base_link";
     //cout<<endl<<"odom_count: "<<odom_count_<<endl;
-    //stfDriftyOdomWrtBase_.child_frame_id_ = "drifty_odom"; // make this legal for multiply
+    //stfDriftyOdomWrtBase_.child_frame_id_ = "odom"; // make this legal for multiply
     
     // the odom message tells us the estimated pose of the robot's base_frame with respect to the "odom" frame
     // the odom frame is just (0,0,0) when and wherever the robot wakes up;
@@ -150,16 +151,16 @@ void OdomTf::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     // with respect to the map frame is imperfect, and further, odom w/rt map changes (slowly) in time, according to 
     // odometry drift error accumulation
     
-    //We can't publish base_frame w/rt drifty_odom frame, because base_frame is already a child of the "odom" frame
+    //We can't publish base_frame w/rt odom frame, because base_frame is already a child of the "odom" frame
     // published by our simulation  (this will not be a problem with a real robot)
-    //here's a trick: publish the drifty_odom frame as a child of the robot's base_frame to avoid a kinematic loop
-    //rviz will then be able to transform the drifty_odom frame appropriately in whatever fixed frame is chosen for display
+    //here's a trick: publish the odom frame as a child of the robot's base_frame to avoid a kinematic loop
+    //rviz will then be able to transform the odom frame appropriately in whatever fixed frame is chosen for display
     // use stamped_transform_inverse() function to invert base w/rt odom into odom w/rt base
     stfDriftyOdomWrtBase_ = xform_utils.stamped_transform_inverse(stfBaseLinkWrtDriftyOdom_); 
     //use the TRANSFORM PUBLISHER to send out this transform on the tf topic
     br_.sendTransform(stfDriftyOdomWrtBase_);
     
-    //DriftyOdomWrtMap is transform of our drifty_odom frame with respect to the map frame.
+    //DriftyOdomWrtMap is transform of our odom frame with respect to the map frame.
     // this is updated by callbacks from AMCL publications of robot w/rt map
     // this transform will update infrequently (e.g. 1Hz), but it also should only change slowly (at the rate of odom drift)
 
@@ -168,14 +169,14 @@ void OdomTf::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     // cout<<endl<<"stfBaseLinkWrtDriftyOdom_"<<endl;
     //xform_utils.printStampedTf(stfBaseLinkWrtDriftyOdom_);       
     
-    //cascde the frames: for frames b==base_link, m==map, do==drifty_odom,
+    //cascde the frames: for frames b==base_link, m==map, do==odom,
     // 
     // T_b/m = m^T_b = m^T_do * do^T_b = T_do/m * T_b/do
     // put the answer in stfEstBaseWrtMap_
     xform_utils.multiply_stamped_tfs(stfDriftyOdomWrtMap_,stfBaseLinkWrtDriftyOdom_,stfEstBaseWrtMap_);
     //publish this frame, for visualization; change "base_link" to "est_base" to avoid name conflict
     // and kinematic loop;  Visualized result of est_base is an estimate of the robot's pose in
-    // the map frame, using amcl and using the imperfect (drifty) odom estimate
+    // the map frame, using amcl and using the imperfect odom estimate
     // ideally, this frame is virtually perfect, matching the base_link frame known to rviz
     stfEstBaseWrtMap_.child_frame_id_ = "est_base";
     //cout<<endl<<"stfEstBaseWrtMap_"<<endl;
@@ -191,11 +192,11 @@ void OdomTf::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
 //amcl will publish best-estimate poses of the base-link with respect to the map frame
 // these are imprecise, and they are updated slowly (e.g. 1Hz)
 // when we get an update, we'll know base-frame w/rt map;
-//  at each such update, get the most current base-frame w/rt drifty odom
-//  figure out from this where is the drifty odom frame w/rt the map
-// we can assume that the drifty-odom frame moves only slowly with respect to the map, so infrequent updates should be OK
-// We can re-use the transform: drifty_odom w/rt map repeatedly (e.g. at 50Hz, coincident with drifty-odom publication updates)
-//  continue to use the same drifty_odom w/rt map transform until we get a new one  (which should be pretty close to the previous one)
+//  at each such update, get the most current base-frame w/rt odom
+//  figure out from this where is the odom frame w/rt the map
+// we can assume that the odom frame moves only slowly with respect to the map, so infrequent updates should be OK
+// We can re-use the transform: odom w/rt map repeatedly (e.g. at 50Hz, coincident with odom publication updates)
+//  continue to use the same odom w/rt map transform until we get a new one  (which should be pretty close to the previous one)
 void OdomTf::amclCallback(const geometry_msgs::PoseWithCovarianceStamped& amcl_rcvd) {
     amcl_pose_ = amcl_rcvd.pose.pose;
     ROS_WARN("amcl pose: x, y, yaw: %f, %f, %f", amcl_pose_.position.x, amcl_pose_.position.y, xform_utils.convertPlanarQuat2Phi(amcl_pose_.orientation));
@@ -230,7 +231,7 @@ void OdomTf::amclCallback(const geometry_msgs::PoseWithCovarianceStamped& amcl_r
    //publish the estimated odom frame w/rt the map.  This is useful for visualization, e.g. to see
     //how rapidly the odometry estimate is drifting
     // slight of hand...rename the child frame before publishing, so it does not conflict with
-    // existing name "drifty_odom", to avoid a kinematic-loop error in tf
+    // existing name "odom", to avoid a kinematic-loop error in tf
     // result will be corrected_odom w/rt map
     // THIS TRANSFORM SHOULD BE SLOWLY CHANGING if the odom estimates have low drift rate
     // THIS TRANSFORM will only get updated when new amcl estimates are available...e.g. 1Hz
@@ -239,7 +240,7 @@ void OdomTf::amclCallback(const geometry_msgs::PoseWithCovarianceStamped& amcl_r
     //xform_utils.printStampedTf(stfDriftyOdomWrtMap_);      
     br_.sendTransform(stfDriftyOdomWrtMap_);   
     //done publishing, so restore correct frame name
-    stfDriftyOdomWrtMap_.child_frame_id_ = "drifty_odom"; //change this frame name back, for use
+    stfDriftyOdomWrtMap_.child_frame_id_ = "odom"; //change this frame name back, for use
     // in odom callback
     
     //amcl makes its own estimate of the pose of the robot's base frame w/rt map
