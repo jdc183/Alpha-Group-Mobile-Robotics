@@ -57,19 +57,7 @@ int main(int argc, char **argv) {
     pose.position.y = 2.65 - distRobotFrontToCenter; // front of robot on center of dock
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
-
-    pose.position.x = 0.0;
-    pose_stamped.pose = pose;
-    path_srv.request.path.poses.push_back(pose_stamped);
-    
-    pose.position.y = 0.0;
-    pose_stamped.pose = pose;
-    path_srv.request.path.poses.push_back(pose_stamped);
-    
-    //repeat (x,y) with new heading:
-    pose_stamped.pose.orientation = convertPlanarPhi2Quaternion(0); 
-    path_srv.request.path.poses.push_back(pose_stamped);
-    
+        
     client.call(path_srv);
 
     return 0;
