@@ -37,8 +37,8 @@
 // SERIOUSLY ADD INTEGRAL COMPONENTS LAST
 
 const double UPDATE_RATE = 50.0; // choose the desired-state publication update rate
-const double K_PHI= 10.0; // control gains for steering
-const double K_PHI_D = 4.0; // NG control gain to dampen the spin controller. guessed the value. 
+const double K_PHI= 5.0; // control gains for steering
+const double K_PHI_D = 0.0; // NG control gain to dampen the spin controller. guessed the value. 
 const double K_PHI_I = 0.0; // NG control gain to INTEGRATE the spin controller. guessed the value. 
     //CONTROLLER CONTINUES TO ACCUMULATE ERROR (int_heading_error) THE LONGER IT SITS THERE. IF MOTORS ARE OFF IT WILL ACCUMULATE TO INF AND ROBOT WILL LURCH. MAKE SURE TO FLUSH THESE TERMS BEFORE ROBOT IS TURNED ON!
     // NEVER LET THESE VALUES GET TOO LARGE; ANTIWINDUP. MAKE A SATURATION FUNCTION THAT LIMITS MAX. CAN USE EXACT SAME FUNCTION AS THE ONE THAT LIMITS ANG VEL PROVIDED IN CODE (LINE 243 ODOM)

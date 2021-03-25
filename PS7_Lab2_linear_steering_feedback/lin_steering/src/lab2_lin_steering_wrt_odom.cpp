@@ -72,22 +72,23 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
 
     twist_cmd2_.twist = twist_cmd_; // copy the twist command into twist2 message
     twist_cmd2_.header.stamp = ros::Time::now(); // look up the time and put it in the header  
-    	
-	//More Lab 7 Additions
-	if(std::abs(des_state_vel_) < 0.001){
-		if(std::abs(des_state_omega_) < 0.001){
-			mode = HALT;
-            ROS_INFO("MODE: HALT");
-		}
-		else{
-			mode = SPIN_IN_PLACE;
-            ROS_INFO("MODE: SPIN");
-		}
-	}
-	else{
-		mode = LANE_DRIFT;
-        ROS_INFO("MODE: GO");
-	}
+    // 	ROS_INFO("des_state_omega: %f",des_state_omega_);
+	// ROS_INFO("des_state_vel: %f",des_state_vel_);
+	// //More Lab 7 Additions
+	// if(std::abs(des_state_vel_) < 0.001){
+	// 	if(std::abs(des_state_omega_) < 0.001){
+	// 		mode = HALT;
+    //         ROS_INFO("MODE: HALT");
+	// 	}
+	// 	else{
+	// 		mode = SPIN_IN_PLACE;
+    //         ROS_INFO("MODE: SPIN");
+	// 	}
+	// }
+	// else{
+	// 	mode = LANE_DRIFT;
+    //     ROS_INFO("MODE: GO");
+	// }
 
 }
 
@@ -149,6 +150,8 @@ void SteeringController::desStateCallback(const nav_msgs::Odometry& des_state_rc
     des_state_pose_ = des_state_rcvd.pose.pose;
     des_state_vel_ = des_state_rcvd.twist.twist.linear.x;
     des_state_omega_ = des_state_rcvd.twist.twist.angular.z;
+	ROS_INFO("Odom callback des_vel: %f", des_state_vel_);
+	ROS_INFO("Odom callback des_state_omega: %f", des_state_omega_);
     des_state_x_ = des_state_rcvd.pose.pose.position.x;
     des_state_y_ = des_state_rcvd.pose.pose.position.y;
     des_state_quat_ = des_state_rcvd.pose.pose.orientation;
@@ -247,7 +250,24 @@ void SteeringController::lin_steering_algorithm() {
    
 // LAB 7 CHANGES 
     // do something clever with this information  
-	
+	// ROS_INFO("des_state_omega: %f",des_state_omega_);
+	// ROS_INFO("des_state_vel: %f",des_state_vel_);
+	//More Lab 7 Additions
+	if(std::abs(des_state_vel_) < 0.001){
+		if(std::abs(des_state_omega_) < 0.001){
+			mode = HALT;
+            ROS_INFO("MODE: HALT");
+		}
+		else{
+			mode = SPIN_IN_PLACE;
+            ROS_INFO("MODE: SPIN");
+		}
+	}
+	else{
+		mode = LANE_DRIFT;
+        ROS_INFO("MODE: GO");
+	}
+
 	ROS_INFO("ENTERING SWITCH");
 	switch (mode){
 // NEED A SWITCH CASE STATEMENT FOR WHEN TO USE THE CORRECT METHOD
