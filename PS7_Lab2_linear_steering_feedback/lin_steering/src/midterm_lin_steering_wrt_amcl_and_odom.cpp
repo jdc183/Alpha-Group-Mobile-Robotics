@@ -7,7 +7,9 @@
 
 
 // this header incorporates all the necessary #include files and defines the class "SteeringController"
-#include "steering_algorithm.h"
+// midterm change
+#include "lab2_steering_algorithm.h"
+// end midterm change
 #include <odom_tf/odom_tf.h>
 #include <xform_utils/xform_utils.h>
 
