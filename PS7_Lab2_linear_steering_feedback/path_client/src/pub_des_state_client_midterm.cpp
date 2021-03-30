@@ -46,15 +46,15 @@ int main(int argc, char **argv) {
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header.frame_id = "world";
     geometry_msgs::Pose pose;
-    pose.position.x = 0.3; // Center of robot aligned with center of dock
-    pose.position.y = 0.0;
+    pose.position.x = 0.0; // Center of robot aligned with center of dock
+    pose.position.y = 0.412;
     pose.position.z = 0.0; // let's hope so!
     quat = convertPlanarPhi2Quaternion(0);
     pose.orientation = quat;
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
 
-    pose.position.y = 2.65 - distRobotFrontToCenter; // front of robot on center of dock
+    pose.position.x = 3.903// - distRobotFrontToCenter; // front of robot on center of dock
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
         
