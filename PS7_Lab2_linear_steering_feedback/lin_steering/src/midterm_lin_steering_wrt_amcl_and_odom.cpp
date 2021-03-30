@@ -171,6 +171,10 @@ void SteeringController::lin_steering_algorithm() {
     double lateral_err;
     double trip_dist_err; // error is scheduling...are we ahead or behind?
     
+//START MIDTERM ADDITIONS
+    double int_trip_dist_error;
+    double int_heading_error;
+//END MIDTERM ADDITIONS
 
     // have access to: des_state_vel_, des_state_omega_, des_state_x_, des_state_y_, des_state_phi_ and corresponding odom values    
     double dx = des_state_x_- g_odom_tf_x;
@@ -200,10 +204,58 @@ void SteeringController::lin_steering_algorithm() {
     //steering_errs_publisher_.publish(steering_errs_); // suitable for plotting w/ rqt_plot
     //END OF DEBUG STUFF
     
-     // do something clever with this information     
-    controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err; //speed up/slow down to null out 
-    //controller_omega = des_state_omega_; //ditto
-    controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err;
+    //START MORE MIDTERM ADDITIONS
+	if(std::abs(des_state_vel_) < 0.001){
+		if(std::abs(des_state_omega_) < 0.001){
+			mode = HALT;
+            ROS_INFO("MODE: HALT");
+		}
+		else{
+			mode = SPIN_IN_PLACE;
+            ROS_INFO("MODE: SPIN");
+		}
+	}
+	else{
+		mode = LANE_DRIFT;
+        ROS_INFO("MODE: GO");
+	}
+
+	ROS_INFO("ENTERING SWITCH");
+	switch (mode){
+		case HALT:
+            ROS_INFO("HALTING");
+	    	controller_speed = 0;
+			controller_omega = 0;
+			break;
+			
+		case SPIN_IN_PLACE:
+            ROS_INFO("SPINNING");
+			controller_speed = 0;
+			int_heading_error += heading_err * dt; 
+	    		controller_omega = des_state_omega_ + K_PHI*heading_err + K_PHI_D * (des_state_omega_- odom_omega_) + K_PHI_I * int_heading_error; // SPIN IN PLACE ALGORITHM
+	    		//want to add another term k_phi * int_heading_error for integral error feedback
+	    		// add extra period of republication of final state for some period of time. indefinitely? sends goal position with 0 des_state_vel over and over
+			break;
+		case LANE_DRIFT:
+            ROS_INFO("GOING");
+	//if moving straight forward
+	    	int_trip_dist_error += trip_dist_err * dt;
+			int_heading_error += heading_err * dt;//Not sure if we want this here, but it's fine for now
+			
+	    		controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err + K_TRIP_DIST_I * int_trip_dist_error; //speed up/slow down to null out
+			//K_TRIP_DIST WILL LET US GET CLOSE TO AN OBJECT. IF TOO LOW, WE WILL BE FAR, AND IF TOO HIGH WE WILL BUMP INTO STUFF AND BE TOO CLOSE.
+	        	//K_TRIP_DIST IS A DIFFERENCE OF A DISTANCE. DES_STATE_VEL_ MATCHES THE ROBOT VEL WITH THE DESIRED VEL
+			controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err + K_PHI_I * int_heading_error; // MOVE ALONG LINE SEGMENT ALGORITHM. LINEAR CONTROL FOR STEERING.
+			//PERFORMS LANE DRIFT CORRECTION - BUT IS IT DOING GOOD ENOUGH? TUNE BY CHANGING GAINS
+			
+			//want to add another term k_phi * int_heading_error for integral error feedback
+			break;
+        default:
+            ROS_INFO("NO STATE ASSIGNED");
+
+	}
+    
+//END MORE MIDTERM ADDITIONS
     
     controller_omega = MAX_OMEGA*sat(controller_omega/MAX_OMEGA); // saturate omega command at specified limits
     
