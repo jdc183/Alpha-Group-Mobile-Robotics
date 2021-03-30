@@ -207,19 +207,24 @@ void SteeringController::lin_steering_algorithm() {
     //END OF DEBUG STUFF
     
     //START MORE MIDTERM ADDITIONS
+
+    ROS_INFO("ENTERING IF STATEMENT");
+    ROS_INFO("des_state_vel_=%f",des_state_vel_);
+    ROS_INFO("des_state_omega_=%f",des_state_vel_);
+
 	if(std::abs(des_state_vel_) < 0.001){
 		if(std::abs(des_state_omega_) < 0.001){
 			mode = HALT;
-            ROS_INFO("MODE: HALT");
+            ROS_INFO("MODE SET: HALT");
 		}
 		else{
 			mode = SPIN_IN_PLACE;
-            ROS_INFO("MODE: SPIN");
+            ROS_INFO("MODE SET: SPIN");
 		}
 	}
 	else{
 		mode = LANE_DRIFT;
-        ROS_INFO("MODE: GO");
+        ROS_INFO("MODE SET: GO");
 	}
 
 	ROS_INFO("ENTERING SWITCH");
@@ -256,6 +261,8 @@ void SteeringController::lin_steering_algorithm() {
             ROS_INFO("NO STATE ASSIGNED");
 
 	}
+
+    ROS_INFO("EXITED SWITCH");
     
 //END MORE MIDTERM ADDITIONS
     

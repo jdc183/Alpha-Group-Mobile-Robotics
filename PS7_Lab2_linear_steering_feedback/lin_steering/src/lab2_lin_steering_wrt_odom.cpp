@@ -253,6 +253,10 @@ void SteeringController::lin_steering_algorithm() {
 	// ROS_INFO("des_state_omega: %f",des_state_omega_);
 	// ROS_INFO("des_state_vel: %f",des_state_vel_);
 	//More Lab 7 Additions
+	ROS_INFO("ENTERING IF STATEMENT");
+	ROS_INFO("des_state_vel_=%f",des_state_vel_);
+	ROS_INFO("des_state_omega_=%f",des_state_vel_);
+
 	if(std::abs(des_state_vel_) < 0.001){
 		if(std::abs(des_state_omega_) < 0.001){
 			mode = HALT;
@@ -303,7 +307,7 @@ void SteeringController::lin_steering_algorithm() {
             ROS_INFO("NO STATE ASSIGNED");
 
 	}
-	    
+	ROS_INFO("EXITED SWITCH");
     //controller_omega = des_state_omega_; //ditto
 
 
