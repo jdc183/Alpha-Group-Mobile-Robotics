@@ -62,8 +62,8 @@ const double K_TRIP_DIST_I = 0.0; // ADD SLOWLY AND BE CAREFUL OF:
     // HUNTING: RAMPS UP TORQUE UNTIL IT BREAKS FREE AND WILL OVERSHOOT BACK AND FORTH (WITH COULOMB FRICTION). DEAL WITH THIS BY MODIFYING IT TO ADD IN DEADBAN (IF STATEMENTS)
 
 // dynamic limitations:  these apply to the steering controller; they may be larger than the limits on des state generation
-const double MAX_SPEED = 1.0; // m/sec; adjust this
-const double MAX_OMEGA = 1.0; //1.0; // rad/sec; adjust this
+const double MAX_SPEED = 0.50; // m/sec; adjust this
+const double MAX_OMEGA = 0.50; //1.0; // rad/sec; adjust this
 
 const int HALT = 0;
 const int SPIN_IN_PLACE = 1;
