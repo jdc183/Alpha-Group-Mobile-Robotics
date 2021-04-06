@@ -7,7 +7,7 @@
 // this one is a 3mx3m square path
 
 #include <ros/ros.h>
-#include <mobot_pub_des_state/path.h>
+#include <ps8_mobot_pub_des_state/path.h>
 #include <iostream>
 #include <string>
 #include <nav_msgs/Path.h>
