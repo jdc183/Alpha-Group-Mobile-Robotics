@@ -1,6 +1,5 @@
+//include statements
 #include <ros/ros.h>
-#include <mobot_pub_des_state/path.h>
-#include <ps8_mobot_pub_des_state/path.h>
 #include <mobot_pub_des_state/path.h>
 #include <iostream>
 #include <string>
