@@ -14,8 +14,9 @@ const double dt = 0.02; //send desired-state messages at fixed rate, e.g. 0.02 s
 //dynamic parameters: should be tuned for target system
 const double accel_max = 0.5; //1m/sec^2
 const double alpha_max = 0.2; // rad/sec^2
-const double speed_max = 1.0; //1 m/sec
-const double omega_max = 1.0; //1 rad/sec
+const double speed_max = 0.25; //1 m/sec
+//const double rev_speed_max = -0.25; //guesssss
+const double omega_max = 0.25; //1 rad/sec
 const double path_move_tol = 0.01; // if path points are within 1cm, fuggidaboutit
 
 const int E_STOPPED = 0; //define some mode keywords
