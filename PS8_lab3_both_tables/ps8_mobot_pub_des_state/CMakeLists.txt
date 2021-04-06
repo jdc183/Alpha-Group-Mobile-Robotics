@@ -29,15 +29,15 @@ catkin_simple()
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
-cs_add_executable(mobot_pub_des_state src/pub_des_state_main.cpp src/pub_des_state.cpp)
-cs_add_executable(mobot_pub_des_state2 src/pub_des_state_main.cpp src/pub_des_state2.cpp)
-cs_add_executable(mobot_pub_des_state_startup src/pub_des_state_startup_main.cpp src/pub_des_state.cpp)
-cs_add_executable(open_loop_controller src/open_loop_controller.cpp)
-cs_add_executable(pub_des_state_path_client src/pub_des_state_path_client.cpp)
-cs_add_executable(pub_des_state_path_client_3x3 src/pub_des_state_path_client_3mx3m_sqr.cpp)
-#cs_add_executable(pub_des_state_path_client_10x10 src/pub_des_state_path_client_10mx10m_sqr.cpp)
-cs_add_executable(starting_pen_pub_des_state_path_client src/starting_pen_pub_des_state_path_client.cpp)
-cs_add_executable(glennan_pub_des_state_path_client src/glennan_pub_des_state_path_client.cpp)
+cs_add_executable(ps8_mobot_pub_des_state src/ps8_pub_des_state_main.cpp src/ps8_pub_des_state.cpp)
+cs_add_executable(ps8_mobot_pub_des_state2 src/ps8_pub_des_state_main.cpp src/ps8_pub_des_state2.cpp)
+cs_add_executable(ps8_mobot_pub_des_state_startup src/ps8_pub_des_state_startup_main.cpp src/ps8_pub_des_state.cpp)
+cs_add_executable(ps8_open_loop_controller src/ps8_open_loop_controller.cpp)
+cs_add_executable(ps8_pub_des_state_path_client src/ps8_pub_des_state_path_client.cpp)
+cs_add_executable(ps8_pub_des_state_path_client_3x3 src/ps8_pub_des_state_path_client_3mx3m_sqr.cpp)
+#cs_add_executable(ps8_pub_des_state_path_client_10x10 src/ps8_pub_des_state_path_client_10mx10m_sqr.cpp)
+cs_add_executable(ps8_starting_pen_pub_des_state_path_client src/ps8_starting_pen_pub_des_state_path_client.cpp)
+cs_add_executable(ps8_glennan_pub_des_state_path_client src/ps8_glennan_pub_des_state_path_client.cpp)
 
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
