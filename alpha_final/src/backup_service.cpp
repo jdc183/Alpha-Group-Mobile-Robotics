@@ -2,6 +2,11 @@
 
 // This code is a service to have the Jinx robot reverse 1 meter.
 
+// i started by setting the accel_max and speed_max to be negative. I also edited down the entire pub_des_state file tto what I believe that we need. 
+// To make sure that this code will run, I checked the traj_builder and noticed an issue with the triangular travel traj builder. I copied the portion over that we need and corrected these issues.
+// I ~believe~ i have the correct components hardcoded to 1 meter (path_queue), but I am not sure becaause this code technically does not have a path queue
+	// I made a set variable (bkwd_dist_desired) to accomplish this. I thought iit would be easier to change this amount at the top of our code if we want to change this value at a later point.
+
 //include statements
 #include <ros/ros.h>
 #include <mobot_pub_des_state/path.h>
@@ -33,6 +38,8 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     trajBuilder_.set_path_move_tol_(path_move_tol_);
     initializePublishers();
     initializeServices();
+    // set desired distance to be 1 meter
+    bkwd_dist_desired = 1.0; // 1m desired
     //define a halt state; zero speed and spin, and fill with viable coords
     halt_twist_.linear.x = 0.0;
     halt_twist_.linear.y = 0.0;
@@ -108,6 +115,7 @@ void build_triangular_travel_traj(geometry_msgs::PoseStamped start_pose,
 // end traj builder
 
 //helper functions
+//might not need 112-118
 void DesStatePublisher::initializeServices() {
     ROS_INFO("Initializing Services");
     flush_path_queue_ = nh_.advertiseService("flush_path_queue_service",
@@ -124,6 +132,7 @@ void DesStatePublisher::initializePublishers() {
     des_psi_publisher_ = nh_.advertise<std_msgs::Float64>("/desPsi", 1);
 }
 
+//might not need 129-136
 bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_WARN("flushing path queue");
     while (!path_queue_.empty())
@@ -157,8 +166,7 @@ void currentStateCallback(const nav_msgs::Odometry current){
 
 void DesStatePublisher::pub_next_state() {
     //state machine; results in publishing a new desired state
-//generate triangular trajectory and start publishing it with corresponding positions that go with it and clock that out
-	// pop off destination vertex should be hardcoded feed it one meter
+	//generate triangular trajectory and start publishing it with corresponding positions that go with it and clock that out
         //case PURSUING_SUBGOAL: //if have remaining pts in computed traj, send them
             //extract the i'th point of our plan:
             current_des_state_ = des_state_vec_[traj_pt_i_];
@@ -174,6 +182,9 @@ void DesStatePublisher::pub_next_state() {
             //check if we have clocked out all of our planned states:
             if (traj_pt_i_ >= npts_traj_) {
                 seg_end_state_ = des_state_vec_.back(); // last state of traj
+                //path_queue_.pop(); 	// pop off destination vertex should be hardcoded feed it one meter
+                bkwd_dist_desired = path_queue_; // i think this may be correct?
+                end_pose_
                 ROS_INFO("reversed 1m: x = %f, y= %f",current_pose_.pose.position.x,
                         current_pose_.pose.position.y);
             }
