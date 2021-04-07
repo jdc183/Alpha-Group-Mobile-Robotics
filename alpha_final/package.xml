@@ -67,7 +67,9 @@
   <run_depend>traj_builder</run_depend>
   <run_depend>message_runtime</run_depend>   
   <run_depend>xform_utils</run_depend>
-  <run_depend>odom_tf</run_depend> 
+  <run_depend>odom_tf</run_depend>
+  
+  <build_depend>nav_p2p_service</build_depend> 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

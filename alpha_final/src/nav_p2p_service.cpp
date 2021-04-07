@@ -18,7 +18,7 @@
 
 //main function
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "append_path_client");
+    ros::init(argc, argv, "nav_p2p_service");
     ros::NodeHandle n;
     
 
