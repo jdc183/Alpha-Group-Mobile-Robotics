@@ -54,7 +54,6 @@ void DesStatePublisher::initializeServices() {
 }
 
 //member helper function to set up publishers;
-
 void DesStatePublisher::initializePublishers() {
     ROS_INFO("Initializing Publishers");
     desired_state_publisher_ = nh_.advertise<nav_msgs::Odometry>("/desState", 1, true);
