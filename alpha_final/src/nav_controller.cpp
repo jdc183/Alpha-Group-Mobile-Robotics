@@ -146,7 +146,7 @@ void initializeServices(ros::NodeHandle n){
     ROS_INFO("connected nav client to nav service");
   */
 
-	backupClient = n.serviceClient<std_srvs::Trigger>("backup");
+	backupClient = n.serviceClient<std_srvs::Trigger>("new_backup");
   while (!backupClient.exists()) {
     ROS_WARN("waiting for backup service...");
     ros::Duration(1.0).sleep();
@@ -229,7 +229,7 @@ mobot_pub_des_state::path addPointXYPtoPath(mobot_pub_des_state::path path_srv, 
 int main(int argc, char **argv) {
 	//ros init
   ROS_WARN("initializing  ROS and node handle");
-  ros::init(argc, argv, "nav_controller");
+  ros::init(argc, argv, "append_path_client");
   ros::NodeHandle n;
   ROS_WARN("initializing OdomTF");
   OdomTf odomTf(&n);
@@ -243,6 +243,8 @@ int main(int argc, char **argv) {
   
   //service initialization
   initializeServices(n);
+
+  backupClient.call(trigger);
 
   //defining goal paths
   ROS_WARN("creating goal paths");
@@ -270,6 +272,7 @@ int main(int argc, char **argv) {
     current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
     ROS_WARN("current position: %f, %f",current.pose.position.x,current.pose.position.y);
     ROS_WARN("goal position: %f, %f",goal1_x,goal1_y);
+    ROS_WARN("test to find first y:  %f",path_srv_goal1.request.path.poses[0].pose.position.y);
     arrived = poseToleranceCheck(current.pose, goal1);
     ros::Duration(0.25).sleep();
   }

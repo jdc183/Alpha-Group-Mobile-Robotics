@@ -14,7 +14,7 @@
 #include <std_srvs/Trigger.h>
 #include <math.h>
 
-#include "pub_des_state.h"
+#include "pub_des_state_new.h"
 
 #include <traj_builder/traj_builder.h> 
 #include <mobot_pub_des_state/path.h>
@@ -25,9 +25,9 @@
 
 //globals
 double bkwd_dist_desired = 1.0; // 1m desired
-double g_accel_max_ = -0.5;
+double g_accel_max_ = 0.5;
 double g_alpha_max_ = 0.2;
-double g_speed_max_ = -1.0;
+double g_speed_max_ = 1.0;
 geometry_msgs::Twist g_halt_twist_;
 double dt_ = 0.02;
 
@@ -39,6 +39,7 @@ ros::ServiceClient pubdesClient;
 mobot_pub_des_state::path path_srv;
 geometry_msgs::PoseStamped est_st_pose_base_wrt_map;
 
+std::vector<nav_msgs::Odometry> g_states;
 
 //OdomTf odomTf;
 XformUtils xform_utils;
@@ -175,8 +176,8 @@ std::vector<nav_msgs::Odometry> build_triangular_travel_traj(geometry_msgs::Pose
     return vec_of_states;
 }
 
-DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
-    //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisher::executeCB, this, _1),false) {
+DesStatePublisherNew::DesStatePublisherNew(ros::NodeHandle& nh) : nh_(nh) {
+    //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisherNew::executeCB, this, _1),false) {
     //as_.start(); //start the server running
     //configure the trajectory builder: 
     dt_ = dt; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
@@ -200,6 +201,7 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     // set desired distance to be 1 meter
     
     //define a halt state; zero speed and spin, and fill with viable coords
+    motion_mode_ = DONE_W_SUBGOAL; //init in state ready to process new goal
     halt_twist_.linear.x = 0.0;
     halt_twist_.linear.y = 0.0;
     halt_twist_.linear.z = 0.0;
@@ -212,27 +214,31 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     current_des_state_.pose.pose = current_pose_.pose;
     seg_start_state_ = current_des_state_;
     seg_end_state_ = current_des_state_;
+
+    des_state_vec_ = g_states;
+
     ROS_INFO("Finished constructing");
 }
 
-void DesStatePublisher::initializeServices() {
+void DesStatePublisherNew::initializeServices() {
     ROS_INFO("Initializing Services");
-    flush_path_queue_ = nh_.advertiseService("flush_path_queue_service",
-            &DesStatePublisher::flushPathQueueCB, this);
-    append_path_ = nh_.advertiseService("append_path_queue_service",
-            &DesStatePublisher::appendPathQueueCB, this);
+    flush_path_queue_ = nh_.advertiseService("flush_path_queue_service_backup",
+            &DesStatePublisherNew::flushPathQueueCB, this);
+    append_path_ = nh_.advertiseService("append_path_queue_service_backup",
+            &DesStatePublisherNew::appendPathQueueCB, this);
 }
 
 //member helper function to set up publishers;
 
-void DesStatePublisher::initializePublishers() {
+void DesStatePublisherNew::initializePublishers() {
     ROS_INFO("Initializing Publishers");
     desired_state_publisher_ = nh_.advertise<nav_msgs::Odometry>("/desState", 1, true);
     des_psi_publisher_ = nh_.advertise<std_msgs::Float64>("/desPsi", 1);
+
 }
 
 //might not need 129-136
-bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+bool DesStatePublisherNew::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_WARN("flushing path queue");
     while (!path_queue_.empty())
     {
@@ -241,7 +247,7 @@ bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_
     return true;
 }
 
-bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& request, mobot_pub_des_state::pathResponse& response) {
+bool DesStatePublisherNew::appendPathQueueCB(mobot_pub_des_state::pathRequest& request, mobot_pub_des_state::pathResponse& response) {
 
     int npts = request.path.poses.size();
     ROS_INFO("appending path queue with %d points", npts);
@@ -251,13 +257,11 @@ bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& requ
     return true;
 }
 
-void DesStatePublisher::set_init_pose(double x, double y, double psi) {
+void DesStatePublisherNew::set_init_pose(double x, double y, double psi) {
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(x, y, psi);
 }
 
-
-
-void DesStatePublisher::pub_next_state() {    
+void DesStatePublisherNew::pub_next_state() {    
     //state machine; results in publishing a new desired state
     switch (motion_mode_) {
         case HALTING: //e-stop service callback sets this mode
@@ -339,37 +343,50 @@ void DesStatePublisher::pub_next_state() {
 bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
     response.success=false;
     ROS_WARN("Trigger received, moving backwards");
+    ROS_WARN("Initializing for backup routine");
     ros::NodeHandle n2;
     OdomTf odomTf(&n2);
     ros::Rate looprate(1 / dt_);
-    DesStatePublisher desStatePublisher(n2);
 
+    ROS_WARN("Calculating current position");
     est_st_pose_base_wrt_map = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
     g_odom_tf_x = est_st_pose_base_wrt_map.pose.position.x;
     g_odom_tf_y = est_st_pose_base_wrt_map.pose.position.y;
     g_odom_tf_phi = xform_utils.convertPlanarQuat2Phi(est_st_pose_base_wrt_map.pose.orientation);
 
+    ROS_WARN("Setting goal position");
     geometry_msgs::PoseStamped goal = est_st_pose_base_wrt_map;
     goal.pose.position.x = goal.pose.position.x - r * cos(g_odom_tf_phi);
     goal.pose.position.y = goal.pose.position.y - r * sin(g_odom_tf_phi);
     goal.pose.orientation = est_st_pose_base_wrt_map.pose.orientation;
 
+    ROS_WARN("Building trajectory");
     std::vector<nav_msgs::Odometry> states;
     states = build_triangular_travel_traj(est_st_pose_base_wrt_map, goal, states);
+    g_states = states;
+    DesStatePublisherNew desStatePublisher(n2);
 
+    
+    ROS_WARN("Beginning path transmission");
     while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose)){
+        ROS_WARN("waiting...");
         desStatePublisher.pub_next_state();
         ros::spinOnce();
         looprate.sleep();
+        est_st_pose_base_wrt_map = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
     }
+    
 
+    //desired_state_publisher_.publish(goal);
+
+    response.success=true;
     return response.success;
 }
 
 //main function
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "backup_service_test");
-    ROS_WARN("initializing  ROS and node handle");
+    ros::init(argc, argv, "new_backup_service");
+    ROS_WARN("initializing ROS and node handle");
 
     ros::NodeHandle n;
     ROS_WARN("initializing OdomTF");
@@ -383,8 +400,8 @@ int main(int argc, char **argv) {
     XformUtils xform_utils;
     
     ROS_WARN("establishing servers");
-    ros::ServiceClient pubdesClient = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service");
-    ros::ServiceServer service = n.advertiseService("backup_test",backupCB);
+    ros::ServiceClient pubdesClient = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service_backup");
+    ros::ServiceServer service = n.advertiseService("new_backup",backupCB);
 
     ros::spin();
 

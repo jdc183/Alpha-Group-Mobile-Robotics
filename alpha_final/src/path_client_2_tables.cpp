@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "append_path_client");
     ros::NodeHandle n;
     ros::ServiceClient client = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service");
-    ros::ServiceClient backup_client = n.serviceClient<std_srvs::Trigger>("backup");
+    ros::ServiceClient backup_client = n.serviceClient<std_srvs::Trigger>("new_backup");
     geometry_msgs::Quaternion quat;
     std_srvs::Trigger trigger;
     

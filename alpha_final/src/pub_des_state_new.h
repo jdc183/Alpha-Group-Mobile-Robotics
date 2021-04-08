@@ -23,7 +23,7 @@ const int DONE_W_SUBGOAL = 1;
 const int PURSUING_SUBGOAL = 2;
 const int HALTING = 3;
 
-class DesStatePublisher {
+class DesStatePublisherNew {
 private:
 
     ros::NodeHandle nh_; // we'll need a node handle; get one upon instantiation
@@ -77,7 +77,7 @@ private:
     bool appendPathQueueCB(mobot_pub_des_state::pathRequest& request,mobot_pub_des_state::pathResponse& response);
 
 public:
-    DesStatePublisher(ros::NodeHandle& nh);//constructor
+    DesStatePublisherNew(ros::NodeHandle& nh);//constructor
     int get_motion_mode() {return motion_mode_;}
     void set_motion_mode(int mode) {motion_mode_ = mode;}
     bool get_estop_trigger() { return e_stop_trigger_;}
