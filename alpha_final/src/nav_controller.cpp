@@ -233,6 +233,11 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   ROS_WARN("initializing OdomTF");
   OdomTf odomTf(&n);
+  while (!odomTf.odom_tf_is_ready()) {
+    ROS_WARN("waiting on odomTf warm-up");
+    ros::Duration(0.5).sleep();
+    ros::spinOnce();
+  }
   ROS_WARN("initializing XformUtils");
   XformUtils xform_utils;
   

@@ -27,6 +27,7 @@ double g_speed_max_;
 geometry_msgs::Twist g_halt_twist_;
 double dt_;
 
+
 geometry_msgs::PoseStamped g_start_pose;
 
 geometry_msgs::Quaternion convertPlanarPsi2Quaternion(double phi) {
