@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
   //service initialization
   initializeServices(n);
 
-  backupClient.call(trigger);
+  //backupClient.call(trigger);
 
   //defining goal paths
   ROS_WARN("creating goal paths");

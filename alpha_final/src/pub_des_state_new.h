@@ -42,7 +42,7 @@ private:
     geometry_msgs::PoseStamped current_pose_;
     std_msgs::Float64 float_msg_;
     double des_psi_;
-    std::queue<geometry_msgs::PoseStamped> path_queue_; //a C++ "queue" object, stores vertices as Pose points in a FIFO queue
+     //a C++ "queue" object, stores vertices as Pose points in a FIFO queue
     int motion_mode_;
     bool e_stop_trigger_; //these are intended to enable e-stop via a service
     bool e_stop_reset_;
@@ -77,6 +77,7 @@ private:
     bool appendPathQueueCB(mobot_pub_des_state::pathRequest& request,mobot_pub_des_state::pathResponse& response);
 
 public:
+    std::queue<geometry_msgs::PoseStamped> path_queue_;
     DesStatePublisherNew(ros::NodeHandle& nh);//constructor
     int get_motion_mode() {return motion_mode_;}
     void set_motion_mode(int mode) {motion_mode_ = mode;}

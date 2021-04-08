@@ -25,9 +25,9 @@
 
 //globals
 double bkwd_dist_desired = 1.0; // 1m desired
-double g_accel_max_ = 0.5;
+double g_accel_max_ = -0.5;
 double g_alpha_max_ = 0.2;
-double g_speed_max_ = 1.0;
+double g_speed_max_ = -1.0;
 geometry_msgs::Twist g_halt_twist_;
 double dt_ = 0.02;
 
@@ -49,7 +49,7 @@ double g_odom_tf_x;
 double g_odom_tf_y;
 double g_odom_tf_phi;
 
-double r = 1.0;
+double r = 3;
 
 //helper functions
 geometry_msgs::Quaternion convertPlanarPsi2Quaternion(double phi) {
@@ -184,14 +184,14 @@ DesStatePublisherNew::DesStatePublisherNew(ros::NodeHandle& nh) : nh_(nh) {
     trajBuilder_.set_dt(dt);
     //dynamic parameters: should be tuned for target system
     accel_max_ = -accel_max; //absolute accel_max?
-    g_accel_max_=accel_max_;
-    trajBuilder_.set_accel_max(accel_max_);
+    g_accel_max_= accel_max_;
+    trajBuilder_.set_accel_max(accel_max);
     alpha_max_ = alpha_max;
     g_alpha_max_ = alpha_max_;
-    trajBuilder_.set_alpha_max(alpha_max_);
+    trajBuilder_.set_alpha_max(alpha_max);
     speed_max_ = -speed_max;
     g_speed_max_ = speed_max_;
-    trajBuilder_.set_speed_max(speed_max_);
+    trajBuilder_.set_speed_max(speed_max);
     omega_max_ = 0;
     trajBuilder_.set_omega_max(omega_max_);
     path_move_tol_ = path_move_tol;
@@ -257,6 +257,20 @@ bool DesStatePublisherNew::appendPathQueueCB(mobot_pub_des_state::pathRequest& r
     return true;
 }
 
+DesStatePublisherNew appendPathQueueNative(std::vector<nav_msgs::Odometry> request, DesStatePublisherNew dsp) {
+    int npts = request.size();
+    ROS_INFO("appending path queue with %d points", npts);
+    for (int i = 0; i < npts; i++) {
+        geometry_msgs::PoseStamped newPose;
+        nav_msgs::Odometry odom=request[i];
+        newPose.pose = odom.pose.pose;
+        newPose.header = odom.header;
+        ROS_WARN("adding %f, %f to path queue",newPose.pose.position.x,newPose.pose.position.y);
+        dsp.path_queue_.push(newPose);
+    }
+    return dsp;
+}
+
 void DesStatePublisherNew::set_init_pose(double x, double y, double psi) {
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(x, y, psi);
 }
@@ -269,6 +283,7 @@ void DesStatePublisherNew::pub_next_state() {
             // new des_state_vec_, set indices and set motion mode;
             current_des_state_ = des_state_vec_[traj_pt_i_];
             current_des_state_.header.stamp = ros::Time::now();
+            ROS_WARN("ATTEMPTING TO PUBLISH (in halting)");
             desired_state_publisher_.publish(current_des_state_);
             current_pose_.pose = current_des_state_.pose.pose;
             current_pose_.header = current_des_state_.header;
@@ -293,6 +308,7 @@ void DesStatePublisherNew::pub_next_state() {
             current_des_state_ = des_state_vec_[traj_pt_i_];
             current_pose_.pose = current_des_state_.pose.pose;
             current_des_state_.header.stamp = ros::Time::now();
+            ROS_WARN("ATTEMPTING TO PUBLISH (in pursuing)");
             desired_state_publisher_.publish(current_des_state_);
             //next three lines just for convenience--convert to heading and publish
             // for rqt_plot visualization            
@@ -315,27 +331,31 @@ void DesStatePublisherNew::pub_next_state() {
         case DONE_W_SUBGOAL: //suspended, pending a new subgoal
             //see if there is another subgoal is in queue; if so, use
             //it to compute a new trajectory and change motion mode
-
+            double queue_size = path_queue_.size();
+            ROS_WARN("Path Queue Size: %f",queue_size);
             if (!path_queue_.empty()) {
+                ROS_WARN("PATH QUEUE NOT EMPTY");
                 int n_path_pts = path_queue_.size();
                 ROS_INFO("%d points in path queue",n_path_pts);
                 start_pose_ = current_pose_;
                 end_pose_ = path_queue_.front();
-                trajBuilder_.build_point_and_go_traj(start_pose_, end_pose_,des_state_vec_);
+                //trajBuilder_.build_point_and_go_traj(start_pose_, end_pose_,des_state_vec_);
+                des_state_vec_  = build_triangular_travel_traj(start_pose_, end_pose_, des_state_vec_);
                 traj_pt_i_ = 0;
                 npts_traj_ = des_state_vec_.size();
                 motion_mode_ = PURSUING_SUBGOAL; // got a new plan; change mode to pursue it
                 ROS_INFO("computed new trajectory to pursue");
             } else { //no new goal? stay halted in this mode 
                 // by simply reiterating the last state sent (should have zero vel)
+                ROS_WARN("ATTEMPTING TO PUBLISH (in done)");
                 desired_state_publisher_.publish(seg_end_state_);
             }
             break;
 
-        default: //this should not happen
+        /*default: //this should not happen
             ROS_WARN("motion mode not recognized!");
             desired_state_publisher_.publish(current_des_state_);
-            break;
+            break;*/
     }
 }
 
@@ -364,13 +384,14 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     std::vector<nav_msgs::Odometry> states;
     states = build_triangular_travel_traj(est_st_pose_base_wrt_map, goal, states);
     g_states = states;
-    DesStatePublisherNew desStatePublisher(n2);
+    DesStatePublisherNew dsp(n2);
 
-    
+    dsp = appendPathQueueNative(states, dsp);
+
     ROS_WARN("Beginning path transmission");
     while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose)){
         ROS_WARN("waiting...");
-        desStatePublisher.pub_next_state();
+        dsp.pub_next_state();
         ros::spinOnce();
         looprate.sleep();
         est_st_pose_base_wrt_map = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
