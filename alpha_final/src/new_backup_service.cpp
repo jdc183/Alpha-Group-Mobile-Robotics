@@ -22,6 +22,13 @@
 //#include <alpha_final/BackupService.h>
 
 //globals
+double bkwd_dist_desired = 1.0; // 1m desired
+double g_accel_max_ = -0.5;
+double g_alpha_max_ = 0.2;
+double g_speed_max_ = -1.0;
+geometry_msgs::Twist g_halt_twist_;
+double dt_ = 0.02;
+
 ros::ServiceClient pubdesClient;
 mobot_pub_des_state::path path_srv;
 geometry_msgs::PoseStamped est_st_pose_base_wrt_map;
@@ -38,6 +45,15 @@ double g_odom_tf_phi;
 double r = 1.0;
 
 //helper functions
+geometry_msgs::Quaternion convertPlanarPsi2Quaternion(double phi) {
+    geometry_msgs::Quaternion quaternion;
+    quaternion.x = 0.0;
+    quaternion.y = 0.0;
+    quaternion.z = sin(phi / 2.0);
+    quaternion.w = cos(phi / 2.0);
+    return quaternion;
+}
+
 void build_triangular_travel_traj(geometry_msgs::PoseStamped start_pose,
     geometry_msgs::PoseStamped end_pose,
     std::vector<nav_msgs::Odometry> &vec_of_states) {
@@ -112,7 +128,7 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     goal.pose.position.y = goal.pose.position.y - r * sin(g_odom_tf_phi);
     goal.pose.orientation = est_st_pose_base_wrt_map.pose.orientation;
 
-    
+    /*
     if(g_odom_tf_phi>(M_PI/4) && g_odom_tf_phi<(3*M_PI/4)){
         ROS_WARN("Instructing to back up in the +y direction...");
         goal.pose.position.y = goal.pose.position.y + 0.5;
@@ -134,15 +150,15 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     path_srv.request.path.poses.push_back(goal);
     ROS_WARN("sending movement request");
     while(!pubdesClient.call(path_srv)){response.success=false;}
-    
+    */
 
-    response.success=true;
+    //response.success=true;
     return response.success;
 }
 
 //main function
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "new_backup_service");
+    ros::init(argc, argv, "backup_service_test");
     ROS_WARN("initializing  ROS and node handle");
 
     ros::NodeHandle n;
@@ -153,7 +169,7 @@ int main(int argc, char **argv) {
     
     ROS_WARN("establishing servers");
     ros::ServiceClient pubdesClient = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service");
-    ros::ServiceServer service = n.advertiseService("new_backup",backupCB);
+    ros::ServiceServer service = n.advertiseService("backup_test",backupCB);
 
     ros::spin();
 
