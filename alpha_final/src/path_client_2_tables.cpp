@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header.frame_id = "world";
     geometry_msgs::Pose pose;
+
     pose.position.x = 0.0; // Center of robot aligned with center of dock
     pose.position.y = 0.412;
     pose.position.z = 0.0; // let's hope so!
@@ -68,7 +69,6 @@ int main(int argc, char **argv) {
     pose.position.x = 0.542; // Center of robot aligned with center of dock
     pose.position.y = 0.0;
     pose.position.z = 0.0; // let's hope so!
-  
     quat = convertPlanarPhi2Quaternion(0);
     pose.orientation = quat;
     pose_stamped.pose = pose;

@@ -396,7 +396,7 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     DesStatePublisherNew dsp(n2);
 
     int ctr=0;
-    while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose) || ctr<states.size()){
+    while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose) || ctr<states.size()-1){
         despub.publish(states[ctr]);
         ros::spinOnce();
         looprate.sleep();

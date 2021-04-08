@@ -136,7 +136,11 @@ void blockToArrival(double x, double y, double phi){
 void initializeServices(ros::NodeHandle n){
   ROS_WARN("initializing necessary services");
   ros::ServiceClient pubdesClient = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service");
-
+  while (!pubdesClient.exists()) {
+    ROS_WARN("waiting for pubdes service...");
+    ros::Duration(1.0).sleep();
+  }
+  ROS_INFO("connected pubdes client to pubdes service");
   /*
 	navClient = n.serviceClient<alpha_final_test::NavServiceTest>("nav_p2p_service_test");
 	while (!navClient.exists()) {
@@ -255,6 +259,7 @@ int main(int argc, char **argv) {
   mobot_pub_des_state::path path_srv_end;
   path_srv_end = addPointXYPtoPath(path_srv_end, 0.0, 0.0, 0, false);
 
+  //ROS_WARN("path_srv_goal1.poses[1].pose.position.x = %f",path_srv_goal1.poses[1].pose.position.x);
   ROS_WARN("issuing service call to reach station 1"); 
   pubdesClient.call(path_srv_goal1);
 
@@ -271,6 +276,7 @@ int main(int argc, char **argv) {
     ROS_WARN("current position: %f, %f",current.pose.position.x,current.pose.position.y);
     ROS_WARN("goal position: %f, %f",goal1_x,goal1_y);
     ROS_WARN("test to find first y:  %f",path_srv_goal1.request.path.poses[0].pose.position.y);
+    //ROS_WARN("path_srv_goal1.poses[1].pose.position.x = %f",path_srv_goal1.request.path.poses[1].pose.position.x);
     arrived = poseToleranceCheck(current.pose, goal1);
     ros::Duration(0.25).sleep();
   }
