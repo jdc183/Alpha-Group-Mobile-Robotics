@@ -244,8 +244,6 @@ int main(int argc, char **argv) {
   //service initialization
   initializeServices(n);
 
-  //backupClient.call(trigger);
-
   //defining goal paths
   ROS_WARN("creating goal paths");
   mobot_pub_des_state::path path_srv_goal1;

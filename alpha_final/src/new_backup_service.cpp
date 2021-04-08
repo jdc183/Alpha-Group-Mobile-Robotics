@@ -44,6 +44,7 @@ std::vector<nav_msgs::Odometry> g_states;
 //OdomTf odomTf;
 XformUtils xform_utils;
 
+ros::Publisher despub;
 
 double g_odom_tf_x;
 double g_odom_tf_y;
@@ -179,6 +180,8 @@ std::vector<nav_msgs::Odometry> build_triangular_travel_traj(geometry_msgs::Pose
 DesStatePublisherNew::DesStatePublisherNew(ros::NodeHandle& nh) : nh_(nh) {
     //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisherNew::executeCB, this, _1),false) {
     //as_.start(); //start the server running
+    OdomTf odomTf(&nh);
+
     //configure the trajectory builder: 
     dt_ = dt; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
     trajBuilder_.set_dt(dt);
@@ -208,7 +211,7 @@ DesStatePublisherNew::DesStatePublisherNew(ros::NodeHandle& nh) : nh_(nh) {
     halt_twist_.angular.x = 0.0;
     halt_twist_.angular.y = 0.0;
     halt_twist_.angular.z = 0.0;
-    current_pose_ = trajBuilder_.xyPsi2PoseStamped(0,0,0);
+    current_pose_ = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
     start_pose_ = current_pose_;
     end_pose_ = current_pose_;
     current_des_state_.pose.pose = current_pose_.pose;
@@ -255,6 +258,12 @@ bool DesStatePublisherNew::appendPathQueueCB(mobot_pub_des_state::pathRequest& r
         path_queue_.push(request.path.poses[i]);
     }
     return true;
+}
+
+DesStatePublisherNew appendPoseToQueue(geometry_msgs::PoseStamped request, DesStatePublisherNew dsp) {
+    ROS_INFO("appending path queue with 1 point");
+    dsp.path_queue_.push(request);
+    return dsp;
 }
 
 DesStatePublisherNew appendPathQueueNative(std::vector<nav_msgs::Odometry> request, DesStatePublisherNew dsp) {
@@ -386,19 +395,14 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     g_states = states;
     DesStatePublisherNew dsp(n2);
 
-    dsp = appendPathQueueNative(states, dsp);
-
-    ROS_WARN("Beginning path transmission");
-    while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose)){
-        ROS_WARN("waiting...");
-        dsp.pub_next_state();
+    int ctr=0;
+    while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose) || ctr<states.size()){
+        despub.publish(states[ctr]);
         ros::spinOnce();
         looprate.sleep();
-        est_st_pose_base_wrt_map = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
-    }
-    
 
-    //desired_state_publisher_.publish(goal);
+        ctr++;
+    }
 
     response.success=true;
     return response.success;
@@ -410,6 +414,8 @@ int main(int argc, char **argv) {
     ROS_WARN("initializing ROS and node handle");
 
     ros::NodeHandle n;
+    despub = n.advertise<nav_msgs::Odometry>("/desState", 1, true);
+
     ROS_WARN("initializing OdomTF");
     OdomTf odomTf(&n);
     while (!odomTf.odom_tf_is_ready()) {
