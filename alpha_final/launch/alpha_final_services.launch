@@ -1,0 +1,4 @@
+<launch>
+	<node name="backup_service" pkg="alpha_final" type="backup_service" output="screen"/>
+
+</launch>

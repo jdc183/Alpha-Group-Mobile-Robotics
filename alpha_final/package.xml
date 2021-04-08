@@ -69,7 +69,8 @@
   <run_depend>xform_utils</run_depend>
   <run_depend>odom_tf</run_depend>
   
-  <build_depend>nav_p2p_service</build_depend> 
+  <build_depend>nav_p2p_service</build_depend>
+  <build_depend>backup_service</build_depend>  
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

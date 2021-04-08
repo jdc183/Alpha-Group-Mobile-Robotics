@@ -1,0 +1,5 @@
+#Success started request
+bool started
+---
+#Success status response
+bool status

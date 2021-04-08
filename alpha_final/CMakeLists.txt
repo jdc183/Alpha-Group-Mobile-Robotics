@@ -32,7 +32,7 @@ catkin_simple()
 
 cs_add_executable(nav_controller src/nav_controller)
 cs_add_executable(nav_p2p_service src/nav_p2p_service)
-#cs_add_executable(backup_service src/backup_service)
+cs_add_executable(backup_service src/backup_service)
 
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
