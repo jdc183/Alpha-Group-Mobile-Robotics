@@ -30,9 +30,9 @@ catkin_simple()
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
 
-cs_add_executable(nav_controller src/nav_controller)
+#cs_add_executable(nav_controller src/nav_controller)
 cs_add_executable(new_nav_controller src/new_nav_controller)
-cs_add_executable(nav_p2p_service src/nav_p2p_service)
+#cs_add_executable(nav_p2p_service src/nav_p2p_service)
 #cs_add_executable(backup_service src/backup_service)
 cs_add_executable(new_backup_service src/new_backup_service)
 cs_add_executable(path_client_2_tables src/path_client_2_tables)

@@ -35,8 +35,8 @@ ros::ServiceClient pubdesClient;
 std_srvs::Trigger trigger;
 
 double distRobotFrontToCenter = 0.2;
-double tolerance = 0.1;
-double angle_tolerance = 0.05;
+double tolerance = 0.25;
+double angle_tolerance = 0.1;
 
 double goal1_x = 3.903;
 double goal1_y = 0.412;
