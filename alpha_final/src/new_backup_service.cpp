@@ -25,9 +25,9 @@
 
 //globals
 double bkwd_dist_desired = 1.0; // 1m desired
-double g_accel_max_ = -0.5;
+double g_accel_max_ = -0.25;
 double g_alpha_max_ = 0.2;
-double g_speed_max_ = -1.0;
+double g_speed_max_ = -0.25;
 geometry_msgs::Twist g_halt_twist_;
 double dt_ = 0.02;
 

@@ -13,6 +13,7 @@
 #include <std_srvs/Trigger.h>
 #include <mobot_pub_des_state/path.h>
 #include <std_msgs/Float64.h>
+#include <math.h>
 
 #include <odom_tf/odom_tf.h>
 #include <xform_utils/xform_utils.h>
@@ -35,7 +36,7 @@ ros::ServiceClient pubdesClient;
 std_srvs::Trigger trigger;
 
 double distRobotFrontToCenter = 0.3;//0.2;
-double tolerance = 0.1;
+double tolerance = 0.3;
 double angle_tolerance = 0.1;
 
 double goal1_x = 3.903;
@@ -69,13 +70,18 @@ bool angleToleranceCheck(double current, double end){
 }
 
 bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
-    int score=0;
+    double dist = sqrt(pow(current.position.x-end.position.x,2) + pow(current.position.y-end.position.y,2));
+    ROS_INFO("Distance to goal: %f", dist);
+    return dist < tolerance;
+    /*int score=0;
     if(pointToleranceCheck(current.position.x, end.position.x)){
         score++;
+        // ROS_INFO("X good");
     }
 
     if(pointToleranceCheck(current.position.y, end.position.y)){
         score++;
+        // ROS_INFO("Y good");
     }
 
     if(pointToleranceCheck(current.position.z, end.position.z)){
@@ -92,10 +98,12 @@ bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
 
     if(angleToleranceCheck(current.orientation.z, end.orientation.z)){
         score++;
+        //ROS_INFO("Quat z good");
     }
 
     if(angleToleranceCheck(current.orientation.w, end.orientation.w)){
         score++;
+        //ROS_INFO("Quat w good");
     }
 
     if(score==4){
@@ -104,6 +112,7 @@ bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
     else{
         return false;
     }
+    */
 }
 
 geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
@@ -163,17 +172,23 @@ int main(int argc, char **argv) {
 
   geometry_msgs::PoseStamped goal = path_srv.request.path.poses[1];
   geometry_msgs::PoseStamped current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  
   while(!poseToleranceCheck(current.pose,goal.pose)){
+    ROS_INFO("current.pose x,y %f,%f",current.pose.position.x, current.pose.position.y);
+    ROS_INFO("goal.pose x,y %f,%f", goal.pose.position.x, goal.pose.position.y);
+    ROS_INFO("current.pose phi:%f",convertPlanarQuat2Phi(current.pose.orientation));
+    ROS_INFO("goal.pose phi:%f",convertPlanarQuat2Phi(goal.pose.orientation));
     current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
   }
-  
+  ROS_INFO("About to back it up");
   backup_client.call(trigger);
+  ROS_INFO("Currently backing it up");
   goal = path_srv.request.path.poses[1];
   double phi = convertPlanarQuat2Phi(goal.pose.orientation);
   goal.pose.position.x = goal.pose.position.x - cos(phi);
   goal.pose.position.y = goal.pose.position.y - sin(phi);
   current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
-  while(!poseToleranceCheck(current.pose,goal.pose)){
+   while(!poseToleranceCheck(current.pose,goal.pose)){
     current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
   }
   
