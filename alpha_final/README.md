@@ -18,9 +18,9 @@ rosrun alpha_final new_backup_service
 rosrun alpha_final new_nav_controller
 
 In order to run this on Gazebo, you will need the following commands:
-roslaunch alpha_final alpha_final_services_test.launch
-rosrun alpha_final new_backup_service.launch
-rosrun alpha_final new_nav_controller.launch
+roslaunch alpha_final alpha_final_sim_newmap.launch
+rosrun alpha_final new_backup_service
+rosrun alpha_final new_nav_controller
 
 ```
 

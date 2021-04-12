@@ -1,0 +1,12 @@
+<launch>
+	<include file="$(find mobot_urdf)/launch/mobot_in_pen.launch"/>
+	
+	<node pkg="amcl" type="amcl" name="amcl" respawn="true" output="screen"/>
+	
+	<node pkg="map_server" type="map_server" name="map_server" args="$(find alpha_final)/actualNewGazeboMap.yaml" output="screen"/>
+	
+	<node name="steeringController" pkg="lin_steering" type="midterm_lin_steering_wrt_amcl_and_odom" output="screen"/>
+	
+	<node name="des_state_publisher" pkg="mobot_pub_des_state" type="mobot_pub_des_state" output="screen"/>
+
+</launch>
