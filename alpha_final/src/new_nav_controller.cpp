@@ -6,6 +6,7 @@
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <queue>
 #include <traj_builder/traj_builder.h> //has almost all the headers we need
 #include <std_msgs/Float64.h>
@@ -33,11 +34,16 @@ ros::ServiceClient grabClient;
 ros::ServiceClient dropClient;
 ros::ServiceClient pubdesClient;
 
+ros::Subscriber amcl_pose_sub;
+
 std_srvs::Trigger trigger;
 
+geometry_msgs::PoseStamped current;
+geometry_msgs::PoseWithCovarianceStamped amcl_pose_data;
+
 double distRobotFrontToCenter = 0.3;//0.2;
-double tolerance = 0.3;
-double angle_tolerance = 0.1;
+double tolerance = 3;
+double angle_tolerance = 2*M_PI;
 
 double goal1_x = 3.903;
 double goal1_y = 0.412;
@@ -131,6 +137,14 @@ double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion) {
     return phi;
 }
 
+//callback
+void amclCallback(const geometry_msgs::PoseWithCovarianceStamped amclPose){
+	ROS_WARN("ENTERED AMCL CALLBACK");
+	amcl_pose_data = amclPose;
+	current.pose = amclPose.pose.pose;
+	current.header = amclPose.header;
+}
+
 //main function
 int main(int argc, char **argv) {
 	//ros init
@@ -139,6 +153,7 @@ int main(int argc, char **argv) {
   OdomTf odomTf(&n);
   ros::ServiceClient client = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service");
   ros::ServiceClient backup_client = n.serviceClient<std_srvs::Trigger>("new_backup");
+  amcl_pose_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose",1,amclCallback);
   geometry_msgs::Quaternion quat;
   std_srvs::Trigger trigger;
   
@@ -171,26 +186,46 @@ int main(int argc, char **argv) {
   client.call(path_srv);
 
   geometry_msgs::PoseStamped goal = path_srv.request.path.poses[1];
-  geometry_msgs::PoseStamped current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  //geometry_msgs::PoseStamped current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
   
   while(!poseToleranceCheck(current.pose,goal.pose)){
+  	ROS_WARN("WAITING TO REACH FIRST GOAL");
     ROS_INFO("current.pose x,y %f,%f",current.pose.position.x, current.pose.position.y);
     ROS_INFO("goal.pose x,y %f,%f", goal.pose.position.x, goal.pose.position.y);
     ROS_INFO("current.pose phi:%f",convertPlanarQuat2Phi(current.pose.orientation));
     ROS_INFO("goal.pose phi:%f",convertPlanarQuat2Phi(goal.pose.orientation));
-    current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+    //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+    
+    ros::spinOnce();
+    ros::Duration(1).sleep();
   }
-  ROS_INFO("About to back it up");
+
+  ros::Duration(5).sleep();
+  ros::spinOnce();
+
+  ROS_WARN("About to back it up");
   backup_client.call(trigger);
-  ROS_INFO("Currently backing it up");
+  ROS_WARN("Currently backing it up");
   goal = path_srv.request.path.poses[1];
-  double phi = convertPlanarQuat2Phi(goal.pose.orientation);
-  goal.pose.position.x = goal.pose.position.x - cos(phi);
-  goal.pose.position.y = goal.pose.position.y - sin(phi);
-  current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
-   while(!poseToleranceCheck(current.pose,goal.pose)){
-    current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  double phi = convertPlanarQuat2Phi(current.pose.orientation);
+  goal.pose.position.x = current.pose.position.x - cos(phi);
+  goal.pose.position.y = current.pose.position.y - sin(phi);
+  goal.pose.orientation = current.pose.orientation;
+  //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  while(!poseToleranceCheck(current.pose,goal.pose)){
+  	ROS_WARN("WAITING TO BACK UP AFTER FIRST GOAL");
+  	ROS_INFO("current.pose x,y %f,%f",current.pose.position.x, current.pose.position.y);
+    ROS_INFO("goal.pose x,y %f,%f", goal.pose.position.x, goal.pose.position.y);
+    ROS_INFO("current.pose phi:%f",convertPlanarQuat2Phi(current.pose.orientation));
+    ROS_INFO("goal.pose phi:%f",convertPlanarQuat2Phi(goal.pose.orientation));
+    //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+
+    ros::spinOnce();
+    ros::Duration(1).sleep();
   }
+
+  ros::Duration(5).sleep();
+  ros::spinOnce();
   
   pose.position.x = 0.542; // Center of robot aligned with center of dock
   pose.position.y = 0.0;
@@ -206,21 +241,42 @@ int main(int argc, char **argv) {
       
   client.call(path_srv);
 
-  goal = path_srv.request.path.poses[1];
-  current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  goal = path_srv.request.path.poses[3];
+  //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
   while(!poseToleranceCheck(current.pose,goal.pose)){
-    current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  	ROS_WARN("WAITING TO REACH SECOND GOAL");
+  	ROS_INFO("current.pose x,y %f,%f",current.pose.position.x, current.pose.position.y);
+    ROS_INFO("goal.pose x,y %f,%f", goal.pose.position.x, goal.pose.position.y);
+    ROS_INFO("current.pose phi:%f",convertPlanarQuat2Phi(current.pose.orientation));
+    ROS_INFO("goal.pose phi:%f",convertPlanarQuat2Phi(goal.pose.orientation));
+    //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+    ros::spinOnce();
+    ros::Duration(1).sleep();
   }
 
+  ros::Duration(5).sleep();
+  ros::spinOnce();
+
   backup_client.call(trigger);
-  goal = path_srv.request.path.poses[1];
-  phi = convertPlanarQuat2Phi(goal.pose.orientation);
-  goal.pose.position.x = goal.pose.position.x - cos(phi);
-  goal.pose.position.y = goal.pose.position.y - sin(phi);
-  current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  goal = path_srv.request.path.poses[3];
+  phi = convertPlanarQuat2Phi(current.pose.orientation);
+  goal.pose.position.x = current.pose.position.x - cos(phi);
+  goal.pose.position.y = current.pose.position.y - sin(phi);
+  goal.pose.orientation = current.pose.orientation;
+  //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
   while(!poseToleranceCheck(current.pose,goal.pose)){
-    current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  	ROS_WARN("WAITING TO BACK UP AFTER SECOND GOAL");
+  	ROS_INFO("current.pose x,y %f,%f",current.pose.position.x, current.pose.position.y);
+    ROS_INFO("goal.pose x,y %f,%f", goal.pose.position.x, goal.pose.position.y);
+    ROS_INFO("current.pose phi:%f",convertPlanarQuat2Phi(current.pose.orientation));
+    ROS_INFO("goal.pose phi:%f",convertPlanarQuat2Phi(goal.pose.orientation));
+    //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+    ros::spinOnce();
+    ros::Duration(1).sleep();
   }
+
+  ros::Duration(5).sleep();
+  ros::spinOnce();
 
   pose.position.x = 0.0; // Center of robot aligned with center of dock
   pose.position.y = 0.0;
@@ -236,10 +292,17 @@ int main(int argc, char **argv) {
       
   client.call(path_srv);
 
-  goal = path_srv.request.path.poses[1];
-  current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  goal = path_srv.request.path.poses[5];
+  //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
   while(!poseToleranceCheck(current.pose,goal.pose)){
-    current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+  	ROS_WARN("WAITING TO REACH END GOAL");
+  	ROS_INFO("current.pose x,y %f,%f",current.pose.position.x, current.pose.position.y);
+    ROS_INFO("goal.pose x,y %f,%f", goal.pose.position.x, goal.pose.position.y);
+    ROS_INFO("current.pose phi:%f",convertPlanarQuat2Phi(current.pose.orientation));
+    ROS_INFO("goal.pose phi:%f",convertPlanarQuat2Phi(goal.pose.orientation));
+    //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
+    ros::spinOnce();
+    ros::Duration(1).sleep();
   }
 
   return 0;

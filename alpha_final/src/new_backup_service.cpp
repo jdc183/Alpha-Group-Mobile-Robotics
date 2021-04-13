@@ -32,25 +32,28 @@ geometry_msgs::Twist g_halt_twist_;
 double dt_ = 0.02;
 
 
-double tolerance = 0.1;
-double angle_tolerance = 0.05;
+double g_tolerance = 0.1;
+double g_angle_tolerance = 0.05;
 
 ros::ServiceClient pubdesClient;
 mobot_pub_des_state::path path_srv;
 geometry_msgs::PoseStamped est_st_pose_base_wrt_map;
 
 std::vector<nav_msgs::Odometry> g_states;
+geometry_msgs::PoseWithCovarianceStamped amcl_pose_data;
+geometry_msgs::PoseStamped current;
 
 //OdomTf odomTf;
 XformUtils xform_utils;
 
 ros::Publisher despub;
+ros::Subscriber amcl_pose_sub;
 
 double g_odom_tf_x;
 double g_odom_tf_y;
 double g_odom_tf_phi;
 
-double r = 3;
+double r = 1; //backup distance
 
 //helper functions
 geometry_msgs::Quaternion convertPlanarPsi2Quaternion(double phi) {
@@ -62,7 +65,7 @@ geometry_msgs::Quaternion convertPlanarPsi2Quaternion(double phi) {
     return quaternion;
 }
 
-bool pointToleranceCheck(double current, double end){
+bool pointToleranceCheck(double current, double end, double tolerance=g_tolerance){
     if((current<(end+tolerance)) && (current>(end-tolerance))){
         return true;
     }
@@ -71,7 +74,7 @@ bool pointToleranceCheck(double current, double end){
     }
 }
 
-bool angleToleranceCheck(double current, double end){
+bool angleToleranceCheck(double current, double end, double angle_tolerance=g_angle_tolerance){
     if((current<(end+angle_tolerance)) && (current>(end-angle_tolerance))){
         return true;
     }
@@ -80,7 +83,7 @@ bool angleToleranceCheck(double current, double end){
     }
 }
 
-bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end){
+bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end, double tolerance=g_tolerance, double angle_tolerance=g_angle_tolerance){
     int score=0;
     if(pointToleranceCheck(current.position.x, end.position.x)){
         score++;
@@ -177,6 +180,7 @@ std::vector<nav_msgs::Odometry> build_triangular_travel_traj(geometry_msgs::Pose
     return vec_of_states;
 }
 
+/*
 DesStatePublisherNew::DesStatePublisherNew(ros::NodeHandle& nh) : nh_(nh) {
     //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisherNew::executeCB, this, _1),false) {
     //as_.start(); //start the server running
@@ -361,14 +365,23 @@ void DesStatePublisherNew::pub_next_state() {
             }
             break;
 
-        /*default: //this should not happen
+        default: //this should not happen
             ROS_WARN("motion mode not recognized!");
             desired_state_publisher_.publish(current_des_state_);
-            break;*/
+            break;
     }
 }
+*/
+
 
 //callbacks
+void amclCallback(const geometry_msgs::PoseWithCovarianceStamped amclPose){
+    ROS_WARN("ENTERED AMCL CALLBACK");
+    amcl_pose_data = amclPose;
+    current.pose = amclPose.pose.pose;
+    current.header = amclPose.header;
+}
+
 bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
     response.success=false;
     ROS_WARN("Trigger received, moving backwards");
@@ -378,30 +391,59 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     ros::Rate looprate(1 / dt_);
 
     ROS_WARN("Calculating current position");
+    g_odom_tf_x = current.pose.position.x;
+    g_odom_tf_y = current.pose.position.y;
+    g_odom_tf_phi = xform_utils.convertPlanarQuat2Phi(current.pose.orientation);
+    /*
     est_st_pose_base_wrt_map = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
     g_odom_tf_x = est_st_pose_base_wrt_map.pose.position.x;
     g_odom_tf_y = est_st_pose_base_wrt_map.pose.position.y;
     g_odom_tf_phi = xform_utils.convertPlanarQuat2Phi(est_st_pose_base_wrt_map.pose.orientation);
+    */
 
     ROS_WARN("Setting goal position");
+    geometry_msgs::PoseStamped goal = current;
+    goal.pose.position.x = goal.pose.position.x - r * cos(g_odom_tf_phi);
+    goal.pose.position.y = goal.pose.position.y - r * sin(g_odom_tf_phi);
+    goal.pose.orientation = current.pose.orientation;
+    /*
     geometry_msgs::PoseStamped goal = est_st_pose_base_wrt_map;
     goal.pose.position.x = goal.pose.position.x - r * cos(g_odom_tf_phi);
     goal.pose.position.y = goal.pose.position.y - r * sin(g_odom_tf_phi);
     goal.pose.orientation = est_st_pose_base_wrt_map.pose.orientation;
+    */
 
     ROS_WARN("Building trajectory");
     std::vector<nav_msgs::Odometry> states;
-    states = build_triangular_travel_traj(est_st_pose_base_wrt_map, goal, states);
+    states = build_triangular_travel_traj(current, goal, states);
+    //states = build_triangular_travel_traj(est_st_pose_base_wrt_map, goal, states);
     g_states = states;
-    DesStatePublisherNew dsp(n2);
+    //DesStatePublisherNew dsp(n2);
 
+    /*
     int ctr=0;
-    while(!poseToleranceCheck(est_st_pose_base_wrt_map.pose, goal.pose) || ctr<states.size()-1){
+    while(!poseToleranceCheck(current.pose, goal.pose) || ctr<states.size()-1){
+        est_st_pose_base_wrt_map = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
         despub.publish(states[ctr]);
         ros::spinOnce();
         looprate.sleep();
 
         ctr++;
+    }
+    */
+
+    for(int i=0;i<states.size();i++){
+        ROS_WARN("Publishing next state");
+        despub.publish(states[i]);
+        /*
+        while(!poseToleranceCheck(current.pose,goal.pose,0.5,2*M_PI)){
+            ROS_WARN("TRYING TO REVERSE");
+            ros::spinOnce();
+        }
+        */
+        //ros::Duration(0.01).sleep();
+        looprate.sleep();
+        ros::spinOnce();
     }
 
     response.success=true;
@@ -415,6 +457,7 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle n;
     despub = n.advertise<nav_msgs::Odometry>("/desState", 1, true);
+    amcl_pose_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose",1,amclCallback);
 
     ROS_WARN("initializing OdomTF");
     OdomTf odomTf(&n);
