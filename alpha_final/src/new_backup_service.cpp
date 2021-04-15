@@ -32,8 +32,8 @@ geometry_msgs::Twist g_halt_twist_;
 double dt_ = 0.02;
 
 
-double g_tolerance = 0.1;
-double g_angle_tolerance = 0.05;
+double g_tolerance = 0.2;
+double g_angle_tolerance = 0.1;
 
 ros::ServiceClient pubdesClient;
 mobot_pub_des_state::path path_srv;
@@ -84,41 +84,44 @@ bool angleToleranceCheck(double current, double end, double angle_tolerance=g_an
 }
 
 bool poseToleranceCheck(geometry_msgs::Pose current, geometry_msgs::Pose end, double tolerance=g_tolerance, double angle_tolerance=g_angle_tolerance){
-    int score=0;
-    if(pointToleranceCheck(current.position.x, end.position.x)){
-        score++;
-    }
+    double dist = sqrt(pow(current.position.x-end.position.x,2) + pow(current.position.y-end.position.y,2));
+    ROS_INFO("Distance to goal: %f", dist);
+    return dist < tolerance;
+    // int score=0;
+    // if(pointToleranceCheck(current.position.x, end.position.x)){
+    //     score++;
+    // }
 
-    if(pointToleranceCheck(current.position.y, end.position.y)){
-        score++;
-    }
+    // if(pointToleranceCheck(current.position.y, end.position.y)){
+    //     score++;
+    // }
 
-    if(pointToleranceCheck(current.position.z, end.position.z)){
-        //score++;
-    }
+    // if(pointToleranceCheck(current.position.z, end.position.z)){
+    //     //score++;
+    // }
 
-    if(angleToleranceCheck(current.orientation.x, end.orientation.x)){
-        //score++;
-    }
+    // if(angleToleranceCheck(current.orientation.x, end.orientation.x)){
+    //     //score++;
+    // }
 
-    if(angleToleranceCheck(current.orientation.y, end.orientation.y)){
-        //score++;
-    }
+    // if(angleToleranceCheck(current.orientation.y, end.orientation.y)){
+    //     //score++;
+    // }
 
-    if(angleToleranceCheck(current.orientation.z, end.orientation.z)){
-        score++;
-    }
+    // if(angleToleranceCheck(current.orientation.z, end.orientation.z)){
+    //     score++;
+    // }
 
-    if(angleToleranceCheck(current.orientation.w, end.orientation.w)){
-        score++;
-    }
+    // if(angleToleranceCheck(current.orientation.w, end.orientation.w)){
+    //     score++;
+    // }
 
-    if(score==4){
-        return true;
-    }
-    else{
-        return false;
-    }
+    // if(score==4){
+    //     return true;
+    // }
+    // else{
+    //     return false;
+    // }
 }
 
 std::vector<nav_msgs::Odometry> build_triangular_travel_traj(geometry_msgs::PoseStamped start_pose,
