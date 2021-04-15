@@ -222,6 +222,10 @@ void SteeringController::lin_steering_algorithm() {
             ROS_INFO("MODE SET: SPIN");
 		}
 	}
+    else if(des_state_vel_ < 0){
+        mode = REVERSE;
+        ROS_INFO("MODE SET: REVERSE");
+    }
 	else{
 		mode = LANE_DRIFT;
         ROS_INFO("MODE SET: GO");
@@ -257,6 +261,12 @@ void SteeringController::lin_steering_algorithm() {
 			
 			//want to add another term k_phi * int_heading_error for integral error feedback
 			break;
+        case REVERSE:
+            ROS_INFO("BACKING UP OPEN-LOOP");//Added for ps8
+            
+            controller_speed = des_state_vel_;
+            controller_omega = 0.0;
+            break;
         default:
             ROS_INFO("NO STATE ASSIGNED");
 
