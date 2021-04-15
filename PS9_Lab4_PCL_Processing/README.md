@@ -11,8 +11,10 @@ canned moves/ positions that are generically useful, ready to take more predefin
 ```
 roscd baxter_playfile_nodes/ 
 ```
-	easy to construct hand moves from these play files. have to close gazebo to run these because 	they can conflict. run with the command:
-	rosrun baxter_playfile_nodes baxter_playback shy.jsp (example for the shy.jsp file)
+easy to construct hand moves from these play files. have to close gazebo to run these because 	they can conflict. run with the command:
+```
+rosrun baxter_playfile_nodes baxter_playback shy.jsp (example for the shy.jsp file)
+```
 
 ## instructions on how to write jsp play files: lecture 17 at 39:32 - 59:27
 (we have to write these jsp files to instruct the robot to go to the correct poses based off of the blocks)
