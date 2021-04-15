@@ -24,9 +24,11 @@ rosrun baxter_playfile_nodes baxter_playback shy.jsp (example for the shy.jsp fi
 	```
 	
 		* cannot depend on output order being consistent
+		
 	```
 	rosrun baxter_playfile_nodes get_and_save_jintervals
 	```
+	
 		* gives value of left and right arms in the preferred order for the jsp files
 		   * only concerned about the right arm
 		* recorded as text files with time it was saved
