@@ -37,7 +37,8 @@ cs_add_executable(new_nav_controller src/new_nav_controller)
 cs_add_executable(new_backup_service src/new_backup_service)
 cs_add_executable(path_client_2_tables src/path_client_2_tables)
 # cs_add_executable(backup_service_test src/backup_service_test)
-
+cs_add_executable(table_2 src/table_2.cpp)
+cs_add_executable(origin src/origin.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
 # target_link_library(example my_lib)
