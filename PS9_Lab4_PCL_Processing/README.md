@@ -41,11 +41,14 @@ make sure your arrival times are geometrically increasing
 physical mary joint angles given in arm#.bag (where # is actually a number)
 
 	```
-	rosbag play arm#.bag -l```
+	rosbag play arm#.bag -l
 	```
-	rostopic list```
 	```
-	rostopic echo /robot/joint_states```
+	rostopic list
+	```
+	```
+	rostopic echo /robot/joint_states
+	```
 	
 check positions with name matches in the order we care about to find the values we want. 
 match up simulators pose to physical robots joint states and then play back a simulation of 		the point cloud display, then we will have something that looks identical to the real robot 			and 	then 	vary the values of the transform publisher	to try to reconcile the calibration of 			the vision 	with the calibration of the kinematics.  The transform has to be right and these 			two things must agree before we can try to pick up anything.
