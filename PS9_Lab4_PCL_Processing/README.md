@@ -19,9 +19,10 @@ rosrun baxter_playfile_nodes baxter_playback shy.jsp (example for the shy.jsp fi
 ## instructions on how to write jsp play files: lecture 17 at 39:32 - 59:27
 (we have to write these jsp files to instruct the robot to go to the correct poses based off of the blocks)
 	```
-	rostopic echo /robot/joint_states```
+	rostopic echo /robot/joint_states
+	```
 	
-		*cannot depend on output order being consistent
+		* cannot depend on output order being consistent
 	```
 	rosrun baxter_playfile_nodes get_and_save_jintervals
 	```
@@ -37,7 +38,11 @@ rosrun baxter_playfile_nodes baxter_playback shy.jsp (example for the shy.jsp fi
 physical mary joint angles given in arm#.bag (where # is actually a number)
 	```
 	rosbag play arm#.bag -l
+	```
+	```
 	rostopic list
+	```
+	```
 	rostopic echo /robot/joint_states
 	```
 check positions with name matches in the order we care about to find the values we want. 
