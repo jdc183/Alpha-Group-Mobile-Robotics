@@ -42,7 +42,7 @@ geometry_msgs::PoseStamped current;
 geometry_msgs::PoseWithCovarianceStamped amcl_pose_data;
 
 double distRobotFrontToCenter = 0.3;//0.2;
-double tolerance = 3;
+double tolerance = .2;
 double angle_tolerance = 2*M_PI;
 
 double goal1_x = 3.903;
