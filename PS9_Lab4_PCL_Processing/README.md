@@ -1,5 +1,6 @@
 # PS8: Navigation Enhancements in the Lab Report
 This is the upload for the alpha group (Nicole Graf, Joseph Cressman, and Andrew Capelli).
+Look at lectures 16 (39:55, initial overview), 17 (32:00), 18 (19:05)
 
 ## Notes 
 ```
@@ -64,6 +65,21 @@ will prompt for file name. specifies topic and frame needed in order to view in 
 rosrun rviz rviz
 ```
 to see in color, color transformer should be RGB8
+
+## Launch files (lecture 16: 1:01:30 - 1:12:03)
+this is where we will specify the locations we input for the robot arm to go to and how to orient the table
+
+## Interpretations of point clouds (lecture 18 21:46 - 42:13)
+make_and_display_ellipse.cpp is an example of how to make a point cloud from scratch. he goes through this script for our understanding of what is going on.
+
+##find_plane_fixed_bounds.cpp (lecture 18 46:00 - 1:23:31)
+goes through script at beginning of this time specification. to run:
+
+```
+rosrun pcl_utils find_plane_fixed_bounds
+```
+
+then, enter the pcd file name. tells the original and filtered number of bytes. select a patch of points to find a corresponding plane with prompts. you can see this area that was specified on rviz with the camera_depth_optical_frame as the fixed frame. the reduction of data holds the accuracy but loses a lot of bytes so it will run faster. need transforms for camera frame to torso frame and torso frame to floor frame. we can add a plane in order to get the tilt. can rerun the command in this section to get the normal vector and tilt (around 1:07:00). you only want to use points that are exclusively on the tabletop. 
 
 ## Operation (lecture 17 at 32 min) 
 ```
