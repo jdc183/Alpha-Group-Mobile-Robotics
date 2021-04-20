@@ -5,6 +5,32 @@
         // fits points into a plane that we specify. 
         // helps find the plane normal and the plane offset
 
+// starting with lecture 19
+// 10:30 skip to around 40 minutes to see if this is doing the part of the lab i want to do
+
+// skipping to lecture 20 because i did not see the info i needed in lecture 19
+// 3:32 goes through the lab
+// talks about part 1 until 12:24
+// part 2 discussion lessgoooo; 12:24 - 
+    // need frame associated with the tabletop 
+    // want to find a transform that corresponds to the surface of the table top so that we can find the objects that are sitting on the table
+    // add a cm to the elevation of the given recorded info to not hit the table when grabbing the blocks
+    // can get location of robot's hand (cartesian representation) by running function: rosrun tf tf_echo frame1name frame2name
+        // spews out pose relationship between the two specified frames
+    // NG We need the dimensions of the green block to do this assignment?
+    // transform tabletop to a normal to camera z frame in order to not miss any targets due to the table incline and the  camera thinking the object is submerged because iit iis lower than it is expecting
+        // try it wiithout this extra transform initially?
+    // process the point cloud images to find blocks
+    // establish a coordinate transform such that you get the translation and rotation outputs based off of the image processing
+        // only need the translation output for this assignment
+    // height should always be -0.186 mm or around there (if torso axis is perpendicular to the floor)
+    // how to do this: minute 25:00
+        // rosrun table_transform find_points_above_table
+            // block#.pcd
+            // make sure transform.launch was ran to do this
+
+
+
 // 20 April 2021
 
 #include<ros/ros.h> //generic C++ stuff
