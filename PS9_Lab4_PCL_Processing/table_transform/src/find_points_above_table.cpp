@@ -3,6 +3,9 @@
 // uses published transform for table frame
 // extracts pointcloud points above the table surface
 
+// lecture 20 34:00 - need to make this a subscriber instead of opening files on disk so it will immediately adapt to the latest image that it sees.
+
+
 #include<ros/ros.h> 
 #include <stdlib.h>
 #include <math.h>

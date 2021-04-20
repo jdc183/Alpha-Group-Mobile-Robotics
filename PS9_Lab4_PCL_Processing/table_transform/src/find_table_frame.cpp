@@ -7,6 +7,9 @@
 // voxel-grid filtering: pcl::VoxelGrid,  setInputCloud(), setLeafSize(), filter()
 //wsn April 2021
 
+// lecture 20 33:24 - 
+
+
 #include<ros/ros.h> 
 #include <stdlib.h>
 #include <math.h>

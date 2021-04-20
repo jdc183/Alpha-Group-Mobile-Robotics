@@ -28,7 +28,16 @@
         // rosrun table_transform find_points_above_table
             // block#.pcd
             // make sure transform.launch was ran to do this
-
+                //roslaunch table_transform table_frame_wrt_cam.launch
+                    // NG should this be the transform we wrote in part 1?
+                // can switch to table frame in rviz
+                    //origin lies in the plane of the table with relationship between the camera and the table frame
+                // switch from pcd to points_above_table
+                    // dominant cluster will be the block that we care about
+                    // property of the block is that it is sitting on the table, so it will be higher than the table
+            // tweak find points above table to filter out the stuff that is not the block (about 30 minutes in)
+        // new package = table transform (31:55)
+        
 
 
 // 20 April 2021
