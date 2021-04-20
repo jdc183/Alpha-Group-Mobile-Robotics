@@ -1,6 +1,10 @@
 // based off of make_and_display_ellipse.cpp
 // (example of creating a point cloud and publishing it for rviz display)
-// for guidance, see lecture 18 starting at 21:42 - . See make_clouds_for_blocks and 
+// for guidance, see lecture 18 starting at 21:42 - 45:30. See make_clouds_for_blocks and 
+// 46:28 - 1:23:31 discussion of find_plane_fixed_bounds.... not in learning_ros. 
+        // fits points into a plane that we specify. 
+        // helps find the plane normal and the plane offset
+
 // 20 April 2021
 
 #include<ros/ros.h> //generic C++ stuff
