@@ -8,8 +8,8 @@
 #include <pcl_ros/point_cloud.h> //use these to convert between PCL and ROS datatypes
 //#include <pcl/ros/conversions.h>
 #include <pcl/conversions.h>
-#include <pcl-1.7/pcl/point_cloud.h>
-#include <pcl-1.7/pcl/PCLHeader.h>
+#include <pcl-1.7/pcl/point_cloud.h> //might have to change to 1.10
+#include <pcl-1.7/pcl/PCLHeader.h> //might have to change to 1.10
 
 using namespace std;
 
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     ROS_INFO("waiting for kinect data");
     while (!got_kinect_image) {
         ROS_INFO("waiting...");
-        ros::spinOnce();
+        //ros::spinOnce(); //No we do not want this we will hit the table
         ros::Duration(0.5).sleep();
     }
     ROS_INFO("got snapshot; saving to file kinect_snapshot.pcd");
