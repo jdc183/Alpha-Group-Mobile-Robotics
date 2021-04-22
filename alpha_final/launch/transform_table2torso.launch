@@ -1,0 +1,16 @@
+<launch>
+<!-- need camera link for Kinect driver -->
+<!-- make this tf external for tuning -->
+<!-- args = x y z rot_about_x rot_about_y rot_about_z-->
+
+<node pkg="tf" type="static_transform_publisher" name="kinect_calib" args="0.2 0 0.15 0 1.4 0 head kinect_link 50"/>
+
+
+<node pkg="tf" type="static_transform_publisher" name="kinect_sensor2" args="0 0 0 -0.500 0.500 -0.500 0.500 kinect_link camera_depth_optical_frame 50"/>
+
+<node pkg="tf" type="static_transform_publisher" name="table_frame" args="0 0 0 -0.500 0.500 -0.500 0.500 kinect_link camera_depth_optical_frame 50"/>
+
+
+</launch>
+<!-- This file is gone over at around 1:00:00 in lecture 16 with the method on how to perform the necessary transforms-->
+<!-- the head is a frame that we can reference. we can check this with rosrun tf tf_echo torso head. this lets us tell where the head is wrt the torso frame-->

@@ -20,6 +20,7 @@
 //#include <pcl/PCLPointCloud2.h> //PCL is migrating to PointCloud2 
 
 #include <pcl/common/common_headers.h>
+#include <pcl/common/centroid.h>
 #include <pcl/point_cloud.h>
 #include <pcl/PCLHeader.h>
 
@@ -34,13 +35,16 @@ int g_ans;
 
 using namespace std;
 PclUtils *g_pcl_utils_ptr;
+//CentroidPoint<pcl::PointXYZ> centroid;
+
 
 void find_indices_of_plane_from_patch(pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud_ptr, vector<int> &indices) {
 
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(input_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
-    pass.setFilterLimits(0.01, 0.05); //retain points with z values between these limits
+    // changed from 0.1 to 0.2; will use this as a filter until only the block is left and other table parts are filtered out.
+    pass.setFilterLimits(0.025, 0.05); //retain points with z values between these limits
     pass.filter(indices); //  this will return the indices of the points in given cloud that pass our test
     cout << "number of points passing the filter = " << indices.size() << endl;
     //This fnc populates the reference arg "indices", so the calling fnc gets the list of interesting points
@@ -84,7 +88,81 @@ Eigen::Affine3f get_table_frame_wrt_camera() {
     return affine_table_wrt_camera;
 }
 
+Eigen::Affine3f get_table_frame_wrt_robot() {
+    bool tferr = true;
+    int ntries = 0;
+    XformUtils xformUtils;
+    tf::TransformListener tfListener;
+    tf::StampedTransform table_frame_wrt_bot_stf;
 
+    Eigen::Affine3f affine_table_wrt_robot;
+    while (tferr) {
+        tferr = false;
+        try {
+
+            tfListener.lookupTransform("torso", "table_frame", ros::Time(0), table_frame_wrt_bot_stf);
+        } catch (tf::TransformException &exception) {
+            ROS_WARN("%s; retrying...", exception.what());
+            tferr = true;
+            ros::Duration(0.5).sleep(); // sleep for half a second
+            ros::spinOnce();
+            ntries++;
+            if (ntries > 5) {
+                 ROS_WARN("did you launch robot's table_frame_wrt_cam.launch?");
+                 ros::Duration(1.0).sleep();
+            }
+        }
+    }
+    ROS_INFO("tf is good for table w/rt robot");
+    xformUtils.printStampedTf(table_frame_wrt_bot_stf);
+    
+
+    tf::Transform table_frame_wrt_bot_tf = xformUtils.get_tf_from_stamped_tf(table_frame_wrt_bot_stf);
+    
+    affine_table_wrt_robot = xformUtils.transformTFToAffine3f(table_frame_wrt_bot_tf);
+
+    //ROS_INFO("affine: ");
+    //xformUtils.printAffine(affine_table_wrt_camera);
+    return affine_table_wrt_robot;
+}
+
+tf::Transform cam_to_robot(){
+    bool tferr = true;
+    int ntries = 0;
+    XformUtils xformUtils;
+    tf::TransformListener tfListener;
+    tf::StampedTransform cam_to_bot;
+
+    Eigen::Affine3f affine_cam_to_bot;
+    while (tferr) {
+        tferr = false;
+        try {
+
+            tfListener.lookupTransform("head", "camera_depth_optical_frame", ros::Time(0), cam_to_bot);
+        } catch (tf::TransformException &exception) {
+            ROS_WARN("%s; retrying...", exception.what());
+            tferr = true;
+            ros::Duration(0.5).sleep(); // sleep for half a second
+            ros::spinOnce();
+            ntries++;
+            if (ntries > 5) {
+                 ROS_WARN("did you launch robot's table_frame_wrt_cam.launch?");
+                 ros::Duration(1.0).sleep();
+            }
+        }
+    }
+    ROS_INFO("tf is good for camera w/rt robot");
+    xformUtils.printStampedTf(cam_to_bot);
+    
+
+    tf::Transform cam_to_bot2 = xformUtils.get_tf_from_stamped_tf(cam_to_bot);
+    
+    affine_cam_to_bot = xformUtils.transformTFToAffine3f(cam_to_bot2);
+
+    //ROS_INFO("affine: ");
+    //xformUtils.printAffine(affine_table_wrt_camera);
+    return cam_to_bot2;
+}
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "pts_above_plane_finder"); //node name
@@ -94,7 +172,9 @@ int main(int argc, char** argv) {
     
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //pointer for color version of pointcloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud_wrt_table_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud_wrt_robot_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pts_above_table_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pts_above_table_ptr2(new pcl::PointCloud<pcl::PointXYZRGB>);
 
 
     //load a PCD file using pcl::io function; alternatively, could subscribe to Kinect messages    
@@ -115,7 +195,7 @@ int main(int argc, char** argv) {
     ros::Publisher pubTableFrame = nh.advertise<sensor_msgs::PointCloud2> ("table_frame_pts", 1);
     ros::Publisher pubPointsAboveTable = nh.advertise<sensor_msgs::PointCloud2> ("pts_above_table", 1);
 
-    sensor_msgs::PointCloud2 ros_cloud_wrt_table,ros_pts_above_table,ros_cloud_orig;
+    sensor_msgs::PointCloud2 ros_cloud_wrt_table,ros_pts_above_table,ros_cloud_orig, ros_cloud_wrt_table2, ros_pts_above_table2;
     //ros_cloud_wrt_table.header.frame_id = "table_frame";
 
     pcl::toROSMsg(*pclKinect_clr_ptr, ros_cloud_orig); //convert from PCL cloud to ROS message this way
@@ -127,9 +207,20 @@ int main(int argc, char** argv) {
     affine_table_wrt_cam = get_table_frame_wrt_camera();
     affine_cam_wrt_table=affine_table_wrt_cam.inverse();
 
+    /*
+    //find the transform of table w/rt robot torso and convert to an affine
+    Eigen::Affine3f affine_table_wrt_robot, affine_robot_wrt_table;
+    affine_table_wrt_robot = get_table_frame_wrt_robot();
+    affine_robot_wrt_table = affine_table_wrt_robot.inverse();*/
+
     pclUtils.transform_cloud(affine_cam_wrt_table, pclKinect_clr_ptr, output_cloud_wrt_table_ptr);
     pcl::toROSMsg(*output_cloud_wrt_table_ptr, ros_cloud_wrt_table);
-    ros_cloud_wrt_table.header.frame_id = "table_frame";    
+    ros_cloud_wrt_table.header.frame_id = "table_frame";
+
+    /*
+    pclUtils.transform_cloud(affine_robot_wrt_table, pclKinect_clr_ptr, output_cloud_wrt_robot_ptr);
+    pcl::toROSMsg(*output_cloud_wrt_robot_ptr, ros_cloud_wrt_table2);
+    ros_cloud_wrt_table2.header.frame_id = "table_frame";*/    
     
     //cout<<"enter 1: ";
     //cin>>g_ans;
@@ -137,16 +228,48 @@ int main(int argc, char** argv) {
     vector<int> indices;
     find_indices_of_plane_from_patch(output_cloud_wrt_table_ptr, indices);
     pcl::copyPointCloud(*output_cloud_wrt_table_ptr, indices, *pts_above_table_ptr); //extract these pts into new cloud
-    pcl::toROSMsg(*pts_above_table_ptr, ros_pts_above_table);
-    ros_pts_above_table.header.frame_id = "table_frame";     
+
+    /*
+    vector<int> indices2;
+    find_indices_of_plane_from_patch(output_cloud_wrt_robot_ptr, indices2);
+    pcl::copyPointCloud(*output_cloud_wrt_robot_ptr, indices2, *pts_above_table_ptr2); //extract these pts into new cloud
+    */
+// PS9 additions
     
+    Eigen::Vector3f c1;
+    c1 = pclUtils.compute_centroid(*pts_above_table_ptr);
+    
+    tf::Transform cam_to_bot = cam_to_robot();
+
+    double botx = c1.x() + cam_to_bot.getOrigin().x();
+    double boty = c1.y() + cam_to_bot.getOrigin().y();
+    double botz = c1.z() + cam_to_bot.getOrigin().z();
+
+    /*
+    Eigen::Vector3f c2;
+    c2 = pclUtils.compute_centroid(*pts_above_table_ptr2);
+    */
+
+    //Transform c1 into torso frame
+    
+    ROS_INFO("block centroid xyz: %f,%f,%f",c1.x(),c1.y(), c1.z());
+    //ROS_INFO("block centroid xyz torso: %f,%f,%f",c2.x(),c2.y(), c2.z());
+    ROS_INFO("block centroid xyz torso: %f,%f,%f",botx,boty,botz);
+// end PS9 additions
+    
+    pcl::toROSMsg(*pts_above_table_ptr, ros_pts_above_table);
+    //pcl::toROSMsg(*pts_above_table_ptr2, ros_pts_above_table2);
+    ros_pts_above_table.header.frame_id = "table_frame";     
+    //ros_pts_above_table2.header.frame_id = "table_frame";     
 
 
     while (ros::ok()) {
 
         pubTableFrame.publish(ros_cloud_wrt_table);
+        //pubTableFrame.publish(ros_cloud_wrt_table2);
         pubCloud.publish(ros_cloud_orig); // will not need to keep republishing if display setting is persistent
         pubPointsAboveTable.publish(ros_pts_above_table);
+        //pubPointsAboveTable.publish(ros_pts_above_table2);
         ros::spinOnce(); //pclUtils needs some spin cycles to invoke callbacks for new selected points
         ros::Duration(0.3).sleep();
     }
