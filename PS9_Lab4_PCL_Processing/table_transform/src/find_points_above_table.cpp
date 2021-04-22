@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
     
     ROS_INFO("block centroid xyz: %f,%f,%f",c1.x(),c1.y(), c1.z());
     //ROS_INFO("block centroid xyz torso: %f,%f,%f",c2.x(),c2.y(), c2.z());
-    ROS_INFO("block centroid xyz torso: %f,%f,%f",botx,boty,botz);
+    ROS_INFO("block centroid xyz in head frame: %f,%f,%f",botx,boty,botz);
 // end PS9 additions
     
     pcl::toROSMsg(*pts_above_table_ptr, ros_pts_above_table);
