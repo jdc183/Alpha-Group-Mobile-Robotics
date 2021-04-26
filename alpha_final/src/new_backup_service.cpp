@@ -385,7 +385,7 @@ void amclCallback(const geometry_msgs::PoseWithCovarianceStamped amclPose){
     current.header = amclPose.header;
 }
 
-bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
+bool backupCB(std_srvs::TriggerRequest &request, std_srvs::TriggerResponse &response){
     response.success=false;
     ROS_WARN("Trigger received, moving backwards");
     ROS_WARN("Initializing for backup routine");

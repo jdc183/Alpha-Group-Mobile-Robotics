@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(alpha_final)
+project(pub_des_state_final)
 
 find_package(catkin_simple REQUIRED)
 
@@ -7,7 +7,7 @@ find_package(catkin_simple REQUIRED)
 #find_package(OpenCV REQUIRED)
 
 #uncomment the next line to use the point-cloud library
-#find_package(PCL 1.7 REQUIRED)
+#find_package(PCL 1.10 REQUIRED)
 
 #uncomment the following 4 lines to use the Eigen library
 #find_package(cmake_modules REQUIRED)
@@ -29,18 +29,16 @@ catkin_simple()
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
+cs_add_executable(final_pub_des_state src/pub_des_state_main.cpp src/pub_des_state.cpp)
+cs_add_executable(final_pub_des_state2 src/pub_des_state_main.cpp src/pub_des_state2.cpp)
+cs_add_executable(final_pub_des_state_startup src/pub_des_state_startup_main.cpp src/pub_des_state.cpp)
+cs_add_executable(final_open_loop_controller src/open_loop_controller.cpp)
+cs_add_executable(final_pub_des_state_path_client src/pub_des_state_path_client.cpp)
+cs_add_executable(final_pub_des_state_path_client_3x3 src/pub_des_state_path_client_3mx3m_sqr.cpp)
+#cs_add_executable(pub_des_state_path_client_10x10 src/pub_des_state_path_client_10mx10m_sqr.cpp)
+cs_add_executable(final_starting_pen_pub_des_state_path_client src/starting_pen_pub_des_state_path_client.cpp)
+cs_add_executable(final_glennan_pub_des_state_path_client src/glennan_pub_des_state_path_client.cpp)
 
-#cs_add_executable(nav_controller src/nav_controller)
-cs_add_executable(new_nav_controller src/new_nav_controller)
-#cs_add_executable(nav_p2p_service src/nav_p2p_service)
-#cs_add_executable(backup_service src/backup_service)
-cs_add_executable(new_backup_service src/new_backup_service)
-cs_add_executable(path_client_2_tables src/path_client_2_tables)
-# cs_add_executable(backup_service_test src/backup_service_test)
-cs_add_executable(table_2 src/table_2.cpp)
-cs_add_executable(origin src/origin.cpp)
-
-cs_add_executable(new_coordinator src/new_coordinator.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
 # target_link_library(example my_lib)
