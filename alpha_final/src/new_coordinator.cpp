@@ -334,9 +334,9 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         ros::Duration(0.5).sleep();
     }
-    ROS_INFO("got snapshot; saving to file kinect_snapshot.pcd");
-    pcl::io::savePCDFile("kinect_snapshot.pcd", *pclKinect_clr_ptr, true);
-    
+    ROS_INFO("got snapshot; saving to file kinect_snapshot1.pcd");
+    pcl::io::savePCDFile("kinect_snapshot1.pcd", *pclKinect_clr_ptr, true);
+/*    
     if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (fname, *pclKinect_clr_ptr) == -1) //* load the file
     {
         ROS_ERROR("Couldn't read file \n");
@@ -345,7 +345,7 @@ int main(int argc, char **argv) {
     //PCD file does not seem to record the reference frame;  set frame_id manually
     pclKinect_clr_ptr->header.frame_id = "camera_depth_optical_frame";
     ROS_INFO("view frame camera_depth_optical_frame on topics pcd, planar_pts, downsampled_pcd, box_filted_pcd and table_frame_pts");
-    
+    */
     
   ros::Duration(5).sleep();
   ros::spinOnce();

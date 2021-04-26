@@ -90,7 +90,11 @@ bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& requ
         path_queue_.push(request.path.poses[i]);
     }
     finished = false;
-    while (!finished);
+    while (!finished) {
+    	this->pub_next_state();
+        ros::spinOnce();
+        ros::Duration(0.02).sleep(); //sleep for defined sample period, then do loop again
+    }
     return true;
 }
 
@@ -117,6 +121,7 @@ void DesStatePublisher::set_init_pose(double x, double y, double psi) {
 
 void DesStatePublisher::pub_next_state() {
     // first test if an e-stop has been triggered
+    ROS_INFO("publishing next state, finished=%s", finished ? "true" : "false");
     if (e_stop_trigger_) {
         e_stop_trigger_ = false; //reset trigger
         //compute a halt trajectory
@@ -158,6 +163,7 @@ void DesStatePublisher::pub_next_state() {
             traj_pt_i_++;
             //segue from braking to halted e-stop state;
             if (traj_pt_i_ >= npts_traj_) { //here if completed all pts of braking traj
+            	ROS_INFO("Done braking, finished = true");
             	finished=true;
                 halt_state_ = des_state_vec_.back(); //last point of halting traj
                 // make sure it has 0 twist
@@ -208,6 +214,7 @@ void DesStatePublisher::pub_next_state() {
                 ROS_INFO("computed new trajectory to pursue");
             } else { //no new goal? stay halted in this mode 
                 // by simply reiterating the last state sent (should have zero vel)
+                ROS_INFO("No new sub goal, finished = true");
                 finished = true;
                 desired_state_publisher_.publish(seg_end_state_);
             }
