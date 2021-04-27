@@ -334,9 +334,16 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         ros::Duration(0.5).sleep();
     }
-    ROS_INFO("got snapshot; saving to file kinect_snapshot1.pcd");
-    pcl::io::savePCDFile("kinect_snapshot1.pcd", *pclKinect_clr_ptr, true);
-/*    
+    ROS_INFO("got snapshot; saving to file kinect_snapshot.pcd");
+//    pcl::io::savePCDFile("kinect_snapshot.pcd", *pclKinect_clr_ptr, true);//throws error why?
+
+// need to create a service? to find block centroid
+// Prepose arms
+// Use block centroid and orientation to call the block_grabber action server
+// We should be able to copy most of the code from block_grabber_action_client
+// That's basically it, right?
+
+/*   //This probly unnecessary since we don't really need to save the pcd to the disk
     if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (fname, *pclKinect_clr_ptr) == -1) //* load the file
     {
         ROS_ERROR("Couldn't read file \n");
