@@ -1,0 +1,5 @@
+#PointCloud input pointcloud
+pcl/PointCloud input
+---
+#Pose of centroid
+geometry_msgs/Pose output

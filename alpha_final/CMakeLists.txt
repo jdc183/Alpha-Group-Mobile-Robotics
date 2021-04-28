@@ -39,6 +39,7 @@ cs_add_executable(path_client_2_tables src/path_client_2_tables)
 # cs_add_executable(backup_service_test src/backup_service_test)
 cs_add_executable(table_2 src/table_2.cpp)
 cs_add_executable(origin src/origin.cpp)
+cs_add_executable(find_centroid_service src/find_centroid_service.cpp)
 
 cs_add_executable(new_coordinator src/new_coordinator.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
