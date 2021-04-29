@@ -15,6 +15,7 @@
 #include <mobot_pub_des_state/path.h>
 #include <std_msgs/Float64.h>
 #include <math.h>
+#include <exception>
 
 #include <odom_tf/odom_tf.h>
 #include <xform_utils/xform_utils.h>
@@ -335,7 +336,11 @@ int main(int argc, char **argv) {
         ros::Duration(0.5).sleep();
     }
     ROS_INFO("got snapshot; saving to file kinect_snapshot.pcd");
-//    pcl::io::savePCDFile("kinect_snapshot.pcd", *pclKinect_clr_ptr, true);//throws error why?
+//    try{
+	    pcl::io::savePCDFile("kinect_snapshot.pcd", *pclKinect_clr_ptr, true);//throws error why?
+//    }catch(std::exception& e){
+//    	ROS_WARN(e.what());
+//    }
 
 // need to create a service? to find block centroid
 // Prepose arms
@@ -359,7 +364,7 @@ int main(int argc, char **argv) {
 
   ROS_WARN("About to back it up");
   backup_client.call(trigger);
-  ROS_WARN("Currently backing it up");
+  ROS_WARN("Backed up %s", trigger.response.success ? "successfully" : "unsuccessfully :(");
   goal = path_srv.request.path.poses[1];
   double phi = convertPlanarQuat2Phi(current.pose.orientation);
   goal.pose.position.x = current.pose.position.x - cos(phi);

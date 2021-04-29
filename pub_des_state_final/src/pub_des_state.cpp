@@ -79,6 +79,7 @@ bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_
     {
         path_queue_.pop();
     }
+    response.success = true;
     return true;
 }
 

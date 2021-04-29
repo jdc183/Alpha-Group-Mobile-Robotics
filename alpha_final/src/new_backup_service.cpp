@@ -24,7 +24,7 @@
 //#include <alpha_final/BackupService.h>
 
 //globals
-double bkwd_dist_desired = 1.0; // 1m desired
+double bkwd_dist_desired = 1; // 1m desired
 double g_accel_max_ = -0.25;
 double g_alpha_max_ = 0.2;
 double g_speed_max_ = -0.25;

@@ -13,9 +13,9 @@ int main(int argc, char **argv) {
     
     // main loop; publish a desired state every iteration
     while (ros::ok()) {
-        desStatePublisher.pub_next_state();
+        // desStatePublisher.pub_next_state();
         ros::spinOnce();
-        looprate.sleep(); //sleep for defined sample period, then do loop again
+        // looprate.sleep(); //sleep for defined sample period, then do loop again
     }
 }
 
