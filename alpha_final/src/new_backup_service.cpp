@@ -469,13 +469,27 @@ int main(int argc, char **argv) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
+    
     ROS_WARN("initializing XformUtils");
     XformUtils xform_utils;
     
     ROS_WARN("establishing servers");
     ros::ServiceClient pubdesClient = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service_backup");
     ros::ServiceServer service = n.advertiseService("new_backup",backupCB);
-
+    
+    //additions based on Newman's suggestions
+    nav_msgs::Odometry dummy;
+    
+    for (int iter = 0; iter<3; iter++){
+	dummy.header = current.header;
+	dummy.pose.pose = current.pose;
+	despub.publish(dummy);
+	ROS_INFO("initializing with dummy publication");
+	ros::Duration(0.5).sleep();
+        ros::spinOnce();
+    }
+    //end additions
+	
     ros::spin();
 
     return 0;

@@ -59,6 +59,8 @@ ros::ServiceClient grabClient;
 ros::ServiceClient dropClient;
 ros::ServiceClient pubdesClient;
 
+ros::ServiceClient find_centroid_client;
+
 ros::Subscriber amcl_pose_sub;
 
 std_srvs::Trigger trigger;
@@ -310,6 +312,9 @@ int main(int argc, char **argv) {
   path_srv.request.path.poses.push_back(pose_stamped);
       
   client.call(path_srv);
+  //                       | | |
+  //this could be total bs V V V
+  find_centroid_client = n.serviceClient<alpha_final::FindCentroidService> ("centroid_service");
 
   geometry_msgs::PoseStamped goal = path_srv.request.path.poses[1];
   //geometry_msgs::PoseStamped current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
@@ -328,6 +333,8 @@ int main(int argc, char **argv) {
 */
   
   ros::Duration(.5).sleep();
+  
+  /*
   //spin until obtain a snapshot
     ROS_INFO("waiting for kinect data");
     while (!got_kinect_image) {
@@ -341,6 +348,7 @@ int main(int argc, char **argv) {
 //    }catch(std::exception& e){
 //    	ROS_WARN(e.what());
 //    }
+*/
 
 // need to create a service? to find block centroid
 // Prepose arms
@@ -419,6 +427,7 @@ int main(int argc, char **argv) {
   ros::spinOnce();
 
   backup_client.call(trigger);
+  
   goal = path_srv.request.path.poses[3];
   phi = convertPlanarQuat2Phi(current.pose.orientation);
   goal.pose.position.x = current.pose.position.x - cos(phi);

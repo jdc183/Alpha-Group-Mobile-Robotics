@@ -42,6 +42,8 @@ cs_add_executable(origin src/origin.cpp)
 # cs_add_executable(find_centroid_service src/find_centroid_service.cpp)
 
 cs_add_executable(new_coordinator src/new_coordinator.cpp)
+
+cs_add_executable(new_centroid_service src/new_centroid_service.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
 # target_link_library(example my_lib)
