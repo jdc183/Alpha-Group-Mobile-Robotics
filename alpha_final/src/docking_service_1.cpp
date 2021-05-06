@@ -14,7 +14,7 @@ using namespace std;
 
 //globals
 ros::ServiceClient client;
-ros::NodeHandle n;
+//ros::NodeHandle n&;
 mobot_pub_des_state::path path_srv;
 geometry_msgs::PoseStamped est_st_pose_base_wrt_map;
 ros::ServiceServer service;
@@ -32,10 +32,10 @@ geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
 }
 
 //callbacks
-bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
+bool callback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
     response.success=false;
-    ROS_WARN("Trigger received, moving backwards");
-    ros::NodeHandle n2;
+    ROS_WARN("Trigger received, moving to table 1");
+    //ros::NodeHandle n2;
     
 	mobot_pub_des_state::path path_srv;
     
@@ -49,7 +49,7 @@ bool backupCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& resp
     pose.position.x = 0.0; // Center of robot aligned with center of dock
     pose.position.y = 0.412;
     pose.position.z = 0.0; // let's hope so!
-    quat = convertPlanarPhi2Quaternion(0);
+    geometry_msgs::Quaternion quat = convertPlanarPhi2Quaternion(0);
     pose.orientation = quat;
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);

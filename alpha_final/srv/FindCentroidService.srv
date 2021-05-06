@@ -1,5 +1,5 @@
 #PointCloud input pointcloud
-sensor_msgs/PointCloud2 input
+#sensor_msgs/PointCloud2 input
 ---
 #Pose of centroid
 geometry_msgs/PoseStamped output

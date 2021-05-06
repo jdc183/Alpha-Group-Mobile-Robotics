@@ -7,5 +7,7 @@
 	<node name="steeringController" pkg="lin_steering" type="midterm_lin_steering_wrt_amcl_and_odom" output="screen"/>
 	
 	<node name="des_state_publisher" pkg="pub_des_state_final" type="final_pub_des_state" args="map.yaml" output="screen"/>
+	
+	<node name="new_backup_service" pkg="alpha_final" type="new_backup_service" output="screen"/>
 
 </launch>
