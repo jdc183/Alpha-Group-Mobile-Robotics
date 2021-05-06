@@ -124,7 +124,7 @@ Eigen::Affine3f get_table_frame_wrt_robot() {
             ros::spinOnce();
             ntries++;
             if (ntries > 5) {
-                 ROS_WARN("did you launch robot's table_frame_wrt_cam.launch?");
+                 ROS_WARN("is the robot running (either irl or simulated)?");
                  ros::Duration(1.0).sleep();
             }
         }
@@ -489,8 +489,9 @@ void findTableFrame(){
 }
 
 //Callback functions
-geometry_msgs::Pose centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::FindCentroidServiceResponse& response){
-
+bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::FindCentroidServiceResponse& response){
+	find_tab
+	return true;
 } 
 
 //Main function 
@@ -498,6 +499,7 @@ int main(int argc, char **argv) {
 	//ros init
 	ros::init(argc, argv, "centroid_service");
 	ros::NodeHandle n;
+	
 
 	ros::ServiceServer service = n.advertiseService("centroid_service",centroidCB);
 

@@ -22,6 +22,7 @@
 
 #include <alpha_final/NavService.h>
 #include <alpha_final/BackupService.h>
+#include <alpha_final/FindCentroidService.h>
 
 //pcl includes:
 #include <sensor_msgs/PointCloud2.h> 
