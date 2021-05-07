@@ -2,4 +2,4 @@
 #sensor_msgs/PointCloud2 input
 ---
 #Pose of centroid
-geometry_msgs/PoseStamped output
+geometry_msgs/Pose output

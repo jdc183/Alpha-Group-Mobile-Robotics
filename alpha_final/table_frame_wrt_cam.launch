@@ -1,3 +1,0 @@
-<launch>
-<node pkg="tf2_ros" type="static_transform_publisher" name="table_frame" args="0.022305 0.143390 0.989079 -0.704664 0.705799 -0.042985 -0.058723 camera_depth_optical_frame table_frame" /> 
-</launch>

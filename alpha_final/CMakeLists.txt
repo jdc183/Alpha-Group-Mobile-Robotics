@@ -42,6 +42,9 @@ cs_add_executable(table_2 src/table_2.cpp)
 cs_add_executable(origin src/origin.cpp)
 cs_add_executable(new_centroid_service src/new_centroid_service.cpp)
  cs_add_executable(docking_service_1 src/docking_service_1.cpp)
+cs_add_executable(object_grabber_service src/object_grabber_service.cpp)
+cs_add_executable(baxter_only_coordinator src/baxter_only_coordinator.cpp)
+cs_add_executable(object_dropper_service src/object_dropper_service.cpp)
 
 cs_add_executable(new_coordinator src/new_coordinator.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package

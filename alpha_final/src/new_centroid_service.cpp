@@ -54,7 +54,7 @@ bool got_kinect_image = false; //snapshot indicator
 //************
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud_wrt_robot_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr pts_above_table_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr pts_above_table_ptr2(new pcl::PointCloud<pcl::PointXYZRGB>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr pts_above_table_wrt_torso(new pcl::PointCloud<pcl::PointXYZRGB>);
 //***************
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //pointer for color version of pointcloud
 
@@ -182,7 +182,7 @@ Eigen::Affine3f get_table_frame_wrt_robot() {
         tferr = false;
         try {
 
-            tfListener.lookupTransform("torso", "table_frame", ros::Time(0), table_frame_wrt_bot_stf);
+            tfListener.lookupTransform("system_ref_frame", "table_frame", ros::Time(0), table_frame_wrt_bot_stf);
         } catch (tf::TransformException &exception) {
             ROS_WARN("%s; retrying...", exception.what());
             tferr = true;
@@ -220,7 +220,7 @@ tf::Transform cam_to_robot(){
         tferr = false;
         try {
 
-            tfListener.lookupTransform("head", "camera_depth_optical_frame", ros::Time(0), cam_to_bot);
+            tfListener.lookupTransform("torso", "camera_depth_optical_frame", ros::Time(0), cam_to_bot);
         } catch (tf::TransformException &exception) {
             ROS_WARN("%s; retrying...", exception.what());
             tferr = true;
@@ -228,7 +228,7 @@ tf::Transform cam_to_robot(){
             ros::spinOnce();
             ntries++;
             if (ntries > 5) {
-                 ROS_WARN("did you launch robot's table_frame_wrt_cam.launch?");
+                 ROS_WARN("did you launch robot's transform.launch?");
                  ros::Duration(1.0).sleep();
             }
         }
@@ -252,7 +252,7 @@ tf::Transform cam_to_robot(){
 
 //Get point cloud from kinect
 void kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
-    ROS_INFO("kinectCB!!!");
+    //ROS_INFO("kinectCB!!!");
     if (!got_kinect_image) { // once only, to keep the data stable
 	ROS_INFO("got new selected kinect image");
 	pcl::fromROSMsg(*cloud, *pclKinect_clr_ptr);
@@ -267,9 +267,9 @@ bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::F
 	ros::NodeHandle n2;
 	PclUtils pclUtils(&n2);	
 	
-	ROS_INFO(" ");
+	//ROS_INFO(" ");
 	ROS_INFO("centroidCB!!!");
-	ROS_INFO(" ");
+	//ROS_INFO(" ");
 	
 	
 	got_kinect_image = false;
@@ -351,14 +351,16 @@ bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::F
 	pclUtils.transform_cloud(affine_cam_wrt_plane, box_filtered_cloud_ptr, output_cloud_wrt_table_ptr);
 	output_cloud_wrt_table_ptr->header.frame_id = "table_frame";
 	
+	int i = system("alphaws");
+	i = system("roscd alpha_final");
 	
 	string launchfile_name = "table_frame_wrt_cam.launch";
 	write_table_transform_launchfile(affine_plane_wrt_cam,launchfile_name);
 	
-	int i = system("source /opt/ros/noetic/setup.launch");
-	i = system("source ~/alpha_ws/devel/setup.bash");
+	
 	i = system("rosnode kill /table_frame");
-	i = system("roslaunch alpha_final table_frame_wrt_cam.launch &");
+	i = system("roslaunch table_frame_wrt_cam.launch &");
+	i = system("alphaws");
 
 	
 	//thursday lab additions
@@ -366,9 +368,16 @@ bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::F
 	pcl::copyPointCloud(*output_cloud_wrt_table_ptr, indices, *pts_above_table_ptr); //extract these pts into new cloud
 	
 	Eigen::Vector3f c1;
+	
     	c1 = pclUtils.compute_centroid(*pts_above_table_ptr);
     
     	tf::Transform cam_to_bot = cam_to_robot();
+    	
+//    	/*
+    	Eigen::Affine3f affine_table_wrt_torso = get_table_frame_wrt_robot();
+    	pclUtils.transform_cloud(affine_table_wrt_torso, pts_above_table_ptr, pts_above_table_wrt_torso);
+	Eigen::Vector3f c2 = pclUtils.compute_centroid(*pts_above_table_wrt_torso);
+//	*/
 
     	double botx = c1.x() + cam_to_bot.getOrigin().x();
     	double boty = c1.y() + cam_to_bot.getOrigin().y();
@@ -377,8 +386,8 @@ bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::F
     	//Transform c1 into torso frame
     
 	ROS_INFO("block centroid xyz: %f,%f,%f",c1.x(),c1.y(), c1.z());
-	//ROS_INFO("block centroid xyz torso: %f,%f,%f",c2.x(),c2.y(), c2.z());
-	ROS_INFO("block centroid xyz in head frame: %f,%f,%f",botx,boty,botz);
+	ROS_INFO("block centroid xyz torso: %f,%f,%f",c2.x(),c2.y(), c2.z());
+	ROS_INFO("block centroid xyz translated origin: %f,%f,%f",botx,boty,botz);
 	// end PS9 additions
 	    
 	pcl::toROSMsg(*pts_above_table_ptr, ros_pts_above_table);
@@ -401,6 +410,14 @@ bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::F
 		ros::Duration(0.1).sleep();
 	}
 	*/
+	response.output.position.x = c2.x();
+	response.output.position.y = c2.y();
+	response.output.position.z = c2.z();
+	//0.947, 0.321, 0.014, 0.005
+	response.output.orientation.x = 0;
+	response.output.orientation.y = 0;
+	response.output.orientation.z = 1;
+	response.output.orientation.w = 0;
 	
 	return true;
 }
