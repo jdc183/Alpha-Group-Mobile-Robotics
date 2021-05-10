@@ -248,10 +248,12 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   OdomTf odomTf(&n);
   ros::ServiceClient client = n.serviceClient<mobot_pub_des_state::path>("append_path_queue_service");
+  ros::ServiceClient flusher = n.serviceClient<std_srvs::Trigger>("flush_path_queue_service");
   ros::ServiceClient backup_client = n.serviceClient<std_srvs::Trigger>("new_backup");
   amcl_pose_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose",1,amclCallback);
   geometry_msgs::Quaternion quat;
-  std_srvs::Trigger trigger;
+  std_srvs::Trigger backupTrigger;
+  std_srvs::Trigger flusherTrigger;
   
   ros::Subscriber pointcloud_subscriber = n.subscribe("/camera/depth_registered/points", 1, kinectCB);
   
@@ -313,8 +315,9 @@ int main(int argc, char **argv) {
   path_srv.request.path.poses.push_back(pose_stamped);
       
   client.call(path_srv);
-  //                       | | |
-  //this could be total bs V V V
+  path_srv.request.path.poses.clear();
+  flusher.call(flusherTrigger);
+  
   find_centroid_client = n.serviceClient<alpha_final::FindCentroidService> ("centroid_service");
 
   geometry_msgs::PoseStamped goal = path_srv.request.path.poses[1];
@@ -371,8 +374,11 @@ int main(int argc, char **argv) {
   ros::Duration(5).sleep();
   ros::spinOnce();
 
+  
+  
   ROS_WARN("About to back it up");
-  backup_client.call(trigger);
+  backupTrigger.response.success = false;
+  backup_client.call(backupTrigger);
   ROS_WARN("Backed up %s", trigger.response.success ? "successfully" : "unsuccessfully :(");
   goal = path_srv.request.path.poses[1];
   double phi = convertPlanarQuat2Phi(current.pose.orientation);
@@ -409,6 +415,8 @@ int main(int argc, char **argv) {
   path_srv.request.path.poses.push_back(pose_stamped);
       
   client.call(path_srv);
+  path_srv.request.path.poses.clear();
+  flusher.call(flusherTrigger);
 
   goal = path_srv.request.path.poses[3];
   //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);
@@ -426,8 +434,10 @@ int main(int argc, char **argv) {
 */
   ros::Duration(5).sleep();
   ros::spinOnce();
-
-  backup_client.call(trigger);
+  
+  
+  backupTrigger.response.success = false;
+  backup_client.call(backupTrigger);
   
   goal = path_srv.request.path.poses[3];
   phi = convertPlanarQuat2Phi(current.pose.orientation);
@@ -463,6 +473,8 @@ int main(int argc, char **argv) {
   path_srv.request.path.poses.push_back(pose_stamped);
       
   client.call(path_srv);
+  path_srv.request.path.poses.clear();
+  flusher.call(flusherTrigger);
 
   goal = path_srv.request.path.poses[5];
   //current = xform_utils.get_pose_from_stamped_tf(odomTf.stfEstBaseWrtMap_);

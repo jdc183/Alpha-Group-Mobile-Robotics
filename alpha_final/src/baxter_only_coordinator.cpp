@@ -61,8 +61,6 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   
   
-  //                       | | |
-  //this could be total bs V V V
   find_centroid_client = n.serviceClient<alpha_final::FindCentroidService> ("centroid_service",1);
   
   while (!find_centroid_client.exists()) {
