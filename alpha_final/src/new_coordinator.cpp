@@ -23,6 +23,7 @@
 #include <alpha_final/NavService.h>
 #include <alpha_final/BackupService.h>
 #include <alpha_final/FindCentroidService.h>
+#include <alpha_final/ObjectGrabberService.h>
 
 //pcl includes:
 #include <sensor_msgs/PointCloud2.h> 
@@ -47,7 +48,9 @@
 #include <pcl/filters/voxel_grid.h> 
 int g_ans;
 
-
+ros::ServiceClient find_centroid_client;
+ros::ServiceClient grabber_client;
+ros::ServiceClient dropper_client;
 
 //globals
 
@@ -59,8 +62,6 @@ ros::ServiceClient scanClient;
 ros::ServiceClient grabClient;
 ros::ServiceClient dropClient;
 ros::ServiceClient pubdesClient;
-
-ros::ServiceClient find_centroid_client;
 
 ros::Subscriber amcl_pose_sub;
 
@@ -295,6 +296,33 @@ int main(int argc, char **argv) {
   ROS_INFO("connected client to service");
   mobot_pub_des_state::path path_srv;
   
+  find_centroid_client = n.serviceClient<alpha_final::FindCentroidService> ("centroid_service",1);
+  
+  while (!find_centroid_client.exists()) {
+    ROS_INFO("waiting for centroid service...");
+    ros::Duration(1.0).sleep();
+  }
+  ROS_INFO("connected client to service");
+  
+  grabber_client = n.serviceClient<alpha_final::ObjectGrabberService> ("grabbbation_service",1);
+  
+  while (!grabber_client.exists()) {
+    ROS_INFO("waiting for grabber service...");
+    ros::Duration(1.0).sleep();
+  }
+  ROS_INFO("connected client to service");
+  
+  dropper_client = n.serviceClient<alpha_final::ObjectGrabberService> ("dropppation_service",1);
+  
+  while (!dropper_client.exists()) {
+    ROS_INFO("waiting for dropper service...");
+    ros::Duration(1.0).sleep();
+  }
+  ROS_INFO("connected client to service");
+  
+  alpha_final::ObjectGrabberService grabber_srv;
+  alpha_final::FindCentroidService centroid_srv;
+  
   //create some path points...this should be done by some intelligent algorithm, but we'll hard-code it here
 
   // we want to add to points. one intermediate to have the robot move left towards docking station and one just before the docking station. 
@@ -374,7 +402,18 @@ int main(int argc, char **argv) {
   ros::Duration(5).sleep();
   ros::spinOnce();
 
+  ROS_INFO("Calling centroid service");
   
+  find_centroid_client.call(centroid_srv);
+  
+  grabber_srv.request.des_pose = centroid_srv.response.output;
+  
+  ROS_INFO("Calling grabber service");
+  
+  grabber_client.call(grabber_srv);
+  
+  ros::Duration(5).sleep();
+  ros::spinOnce();
   
   ROS_WARN("About to back it up");
   backupTrigger.response.success = false;
@@ -435,6 +474,14 @@ int main(int argc, char **argv) {
   ros::Duration(5).sleep();
   ros::spinOnce();
   
+  ROS_INFO("Done grabbin' start droppin'");
+  
+  dropper_client.call(grabber_srv);
+  
+  ROS_INFO("Done droppin'");
+  
+  ros::Duration(5).sleep();
+  ros::spinOnce();
   
   backupTrigger.response.success = false;
   backup_client.call(backupTrigger);
