@@ -416,8 +416,8 @@ bool centroidCB(alpha_final::FindCentroidServiceRequest& request, alpha_final::F
 	//0.947, 0.321, 0.014, 0.005
 	response.output.orientation.x = 0;
 	response.output.orientation.y = 0;
-	response.output.orientation.z = 1;
-	response.output.orientation.w = 0;
+	response.output.orientation.z = 0.707;
+	response.output.orientation.w = 0.707;
 	
 	return true;
 }
